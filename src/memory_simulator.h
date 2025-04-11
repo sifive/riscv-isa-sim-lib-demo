@@ -32,8 +32,8 @@ class memory_simulator_wrapper : public memory_simulator, public abstract_sim_if
     public:
         memory_simulator_wrapper(uint64_t size);
         ~memory_simulator_wrapper() override;
-        bool do_load(reg_t addr, size_t len, uint8_t* bytes) override;
-        bool do_store(reg_t addr, size_t len, const uint8_t* bytes) override;
+        bool load(reg_t addr, size_t len, uint8_t* bytes) override;
+        bool store(reg_t addr, size_t len, const uint8_t* bytes) override;
 };
 
 // another way to create a bridge
@@ -43,8 +43,8 @@ public:
     spike_bridge_t(memory_simulator* sim);
 
     // from abstract_sim_if_t
-    bool do_load(reg_t addr, size_t len, uint8_t* bytes) override;
-    bool do_store(reg_t addr, size_t len, const uint8_t* bytes) override;
+    bool load(reg_t addr, size_t len, uint8_t* bytes) override;
+    bool store(reg_t addr, size_t len, const uint8_t* bytes) override;
 
     virtual ~spike_bridge_t() = default;
     spike_bridge_t() = delete;

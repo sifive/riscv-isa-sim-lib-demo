@@ -67,7 +67,7 @@ memory_simulator_wrapper::memory_simulator_wrapper(uint64_t size): memory_simula
 memory_simulator_wrapper::~memory_simulator_wrapper() {
 }
 
-bool memory_simulator_wrapper::do_load(reg_t addr, size_t len, uint8_t* bytes) {
+bool memory_simulator_wrapper::load(reg_t addr, size_t len, uint8_t* bytes) {
     if (addr + len > mem_size) {
         return false;
     }
@@ -75,7 +75,7 @@ bool memory_simulator_wrapper::do_load(reg_t addr, size_t len, uint8_t* bytes) {
     return true;
 }
 
-bool memory_simulator_wrapper::do_store(reg_t addr, size_t len, const uint8_t* bytes) {
+bool memory_simulator_wrapper::store(reg_t addr, size_t len, const uint8_t* bytes) {
     if (addr + len > mem_size) {
         return false;
     }
@@ -89,8 +89,8 @@ spike_bridge_t::spike_bridge_t(memory_simulator* sim) : sim(sim) {
     printf("creating spike_bridge_t\n");
 }
 
-bool spike_bridge_t::do_load(reg_t addr, size_t len, uint8_t* bytes) {
-    printf("calling spike_bridge_t do_load\n");
+bool spike_bridge_t::load(reg_t addr, size_t len, uint8_t* bytes) {
+    printf("calling spike_bridge_t load\n");
     assert(sim != nullptr);
     
     if (addr + len > sim->size()) {
@@ -101,8 +101,8 @@ bool spike_bridge_t::do_load(reg_t addr, size_t len, uint8_t* bytes) {
     return true;
 }
 
-bool spike_bridge_t::do_store(reg_t addr, size_t len, const uint8_t* bytes) {
-    printf("calling spike_bridge_t do_store\n");
+bool spike_bridge_t::store(reg_t addr, size_t len, const uint8_t* bytes) {
+    printf("calling spike_bridge_t store\n");
     assert(sim != nullptr);
     if (addr + len > sim->size()) {
         return false;
