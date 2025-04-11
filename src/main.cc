@@ -1,4 +1,3 @@
-#include "defines.h"
 #include "s2_demo_proc.h"
 #include "memory_simulator.h"
 #include "riscv/cfg.h"
