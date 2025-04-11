@@ -8,6 +8,9 @@ SPIKE_BUILD_DIR = $(PWD)/riscv-isa-sim/build
 SPIKE_INSTALL_DIR = $(PWD)/spike_install
 SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
 
+# Copy files stamp
+COPY_FILES_STAMP = $(SPIKE_DIR)/.copy_files_stamp
+
 # Spike LIBS
 SPIKE_LIBS = $(SPIKE_INSTALL_DIR)/lib/libriscv.a \
              $(SPIKE_INSTALL_DIR)/lib/libsoftfloat.a \
@@ -39,7 +42,12 @@ LDLIBS = \
     -latomic \
     $(SPIKE_LIBS)
 
-$(SPIKE_CONFIGURE_STAMP):
+$(COPY_FILES_STAMP):
+	cp copy-files/softfloat.mk.in $(SPIKE_DIR)/softfloat/
+	find copy-files -type f ! -name 'softfloat.mk.in' -exec cp {} $(SPIKE_DIR)/riscv/ \;
+	touch $(COPY_FILES_STAMP)
+
+$(SPIKE_CONFIGURE_STAMP): $(COPY_FILES_STAMP)
 	mkdir -p $(SPIKE_BUILD_DIR)
 	cd $(SPIKE_BUILD_DIR) && $(SPIKE_DIR)/configure --prefix=$(SPIKE_INSTALL_DIR) \
 		CFLAGS="-fPIC -O2" \
@@ -70,7 +78,7 @@ spike_demo: $(CORE_OBJS) $(SPIKE_LIBS)
 .PHONY: clean clean_spike reconfigure_spike rebuild_spike build_spike
 clean_spike:
 	rm -rf $(SPIKE_BUILD_DIR) $(SPIKE_INSTALL_DIR)
-	rm -f $(SPIKE_CONFIGURE_STAMP)
+	rm -f $(SPIKE_CONFIGURE_STAMP) $(COPY_FILES_STAMP)
 
 clean: clean_spike
 	rm -f $(OBJS) $(DEPS) spike_demo
