@@ -3,7 +3,13 @@
 This project demonstrates integration of external simulator with Spike (RISC-V ISA Simulator). In this implementation, ALL memory operations (loads, stores, and instruction fetches) are handled by the external simulator, without any of Spike's internal memories.
 
 ## Note on Spike Integration
-Currently, required Spike files are directly copied into the `riscv-isa-sim/` directory. In future versions, this will be replaced with a proper Git submodule pointing to the Spike repository.
+Spike is included as a Git submodule from the official RISC-V repository. After cloning this repository, initialize the submodule with:
+
+```bash
+git submodule update --init --recursive
+```
+
+The build system will automatically copy necessary modified files from the `copy-files` directory into the Spike submodule before building. This ensures that all required customizations are applied without modifying the submodule directly.
 
 ## Components
 
@@ -85,13 +91,16 @@ Modified files:
 
 ## Building
 
+Before building, ensure you have initialized the Spike submodule as mentioned above.
+
 ```bash
 make
 ```
 This will:
-1. Configure and build Spike with required flags
-2. Install Spike libraries in local `spike_install` directory
-3. Build the demo application
+1. Copy customized files from `copy-files` to the Spike submodule
+2. Configure and build Spike with required flags
+3. Install Spike libraries in local `spike_install` directory
+4. Build the demo application
 
 ## Usage
 
@@ -104,7 +113,8 @@ The demo loads and executes a test ELF file ("return-pass.elf") with debug and l
 ## Project Structure
 ```
 .
-├── riscv-isa-sim/      # Spike simulator source
+├── riscv-isa-sim/      # Spike simulator (git submodule)
+├── copy-files/         # Modified Spike files to be copied during build
 ├── s2_demo_proc.cc     # Custom processor implementation
 ├── s2_demo_proc.h      # Processor header
 ├── memory_simulator.h  # Memory simulator base class and implementations
