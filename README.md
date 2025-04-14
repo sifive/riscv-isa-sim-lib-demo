@@ -74,20 +74,10 @@ Then configures the demo build environment with:
 
 ### Changes to Spike master
 Modified files (some of the files are expected to be updated in PR#1953):
-- `riscv/cfg.h`
 - `riscv/csr_init.cc`
-- `riscv/devices.cc`
-- `riscv/devices.h`
 - `riscv/encoding.h`
 - `riscv/riscv.mk.in`
 - `softfloat/softfloat.mk.in`
-
-### Changes relative to branch mslijepc:mslijepc_20250410_ext-sim
-Modified files:
-- `riscv/csr_init.cc` - SiFive-specific register implementations
-- `riscv/encoding.h` - SiFive-specific encodings
-- `riscv/riscv.mk.in` - Compilation configuration
-- `softfloat/softfloat.mk.in` - Compilation configuration
 
 ## Building
 
