@@ -1,15 +1,31 @@
-default: spike_demo
+default: check_prereqs spike_demo
 
 .SECONDARY:
 
+# Check for required environment variable
+ifndef SPIKE_SOURCE_DIR
+$(error SPIKE_SOURCE_DIR is not set. Please set it to point to your Spike repository and run ./src/spike_s2_demo.sh first)
+endif
+
 # Directory definitions
-SPIKE_DIR = $(PWD)/riscv-isa-sim
-SPIKE_BUILD_DIR = $(PWD)/riscv-isa-sim/build
+SPIKE_DIR = $(SPIKE_SOURCE_DIR)
+SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
 SPIKE_INSTALL_DIR = $(PWD)/spike_install
 SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
 
-# Copy files stamp
+# Copy files stamp (managed by spike_s2_demo.sh)
 COPY_FILES_STAMP = $(SPIKE_DIR)/.copy_files_stamp
+
+# Check prerequisites
+.PHONY: check_prereqs
+check_prereqs:
+	@if [ ! -f "$(COPY_FILES_STAMP)" ]; then \
+		echo "Error: Spike files are not patched yet"; \
+		echo "Please run './src/spike_s2_demo.sh' first to patch the files"; \
+		echo "Make sure SPIKE_SOURCE_DIR is set correctly"; \
+		exit 1; \
+	fi
+
 
 # Spike LIBS
 SPIKE_LIBS = $(SPIKE_INSTALL_DIR)/lib/libriscv.a \
@@ -42,12 +58,7 @@ LDLIBS = \
     -latomic \
     $(SPIKE_LIBS)
 
-$(COPY_FILES_STAMP):
-	cp copy-files/softfloat.mk.in $(SPIKE_DIR)/softfloat/
-	find copy-files -type f ! -name 'softfloat.mk.in' -exec cp {} $(SPIKE_DIR)/riscv/ \;
-	touch $(COPY_FILES_STAMP)
-
-$(SPIKE_CONFIGURE_STAMP): $(COPY_FILES_STAMP)
+$(SPIKE_CONFIGURE_STAMP): check_prereqs
 	mkdir -p $(SPIKE_BUILD_DIR)
 	cd $(SPIKE_BUILD_DIR) && $(SPIKE_DIR)/configure --prefix=$(SPIKE_INSTALL_DIR) \
 		CFLAGS="-fPIC -O2" \
@@ -78,7 +89,7 @@ spike_demo: $(CORE_OBJS) $(SPIKE_LIBS)
 .PHONY: clean clean_spike reconfigure_spike rebuild_spike build_spike
 clean_spike:
 	rm -rf $(SPIKE_BUILD_DIR) $(SPIKE_INSTALL_DIR)
-	rm -f $(SPIKE_CONFIGURE_STAMP) $(COPY_FILES_STAMP)
+	rm -f $(SPIKE_CONFIGURE_STAMP)
 
 clean: clean_spike
 	rm -f $(OBJS) $(DEPS) spike_demo
