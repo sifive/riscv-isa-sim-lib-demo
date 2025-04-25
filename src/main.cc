@@ -33,12 +33,14 @@ int main() {
     // this is runtime from this point
     // first reset and load elf
     spike_proc.reset();
-    ext_sim.load_elf_file("return-pass.elf");
+    ext_sim.load_elf_file("vec.elf");
+    // ext_sim.load_elf_file("dhrystone.elf");
     // enable debugging features
     spike_proc.enable_debug();
-    spike_proc.configure_log(true, true);
+    spike_proc.configure_log(true, false);
     // execute 50 instructions
-    spike_proc.step(50);
+    while (1)
+        spike_proc.step(50);
 
     printf("\n\n *** the end ***\n");
 
