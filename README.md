@@ -34,8 +34,8 @@ This script performs several critical tasks:
 - Copies required modified files to simulator repository:
   1. `softfloat/softfloat.mk.in`
   2. `riscv/riscv.mk.in`
-  3. `riscv/encoding.h`
-  5. `riscv/mmu.h`
+  3. `riscv/mmu.h`
+Those 3 files should be upsteamed to riscv-isa-sim Github soon.
 
 The script creates a `.copy_files_stamp` file to track successful patching. If you need to repatch, remove this file and rerun the script.
 
@@ -45,11 +45,6 @@ After the setup script completes successfully, build the project:
 ```bash
 make
 ```
-
-This will:
-1. Configure and build RISC-V ISA Simulator with required flags
-2. Install simulator libraries in local `spike_install` directory
-3. Build the demo application
 
 ### Optional: Building with Memory Operation Hooks
 To enable memory operation observation/debugging, you can build with hooks enabled:
@@ -160,32 +155,6 @@ spike_proc.configure_log(true, true);
 // Run simulation, execute 50 instructions
 spike_proc.step(50);
 ```
-
-## Build System
-The Makefile configures and builds Spike with:
-- Proper flags (`-fPIC`, `-O2`, `-std=c++17`)
-- Required libraries:
-  - `libriscv.a`
-  - `libsoftfloat.a`
-  - `libdisasm.a`
-
-## Troubleshooting
-
-1. If you see "SPIKE_SOURCE_DIR is not set" error:
-   - Make sure you've set the environment variable correctly
-   - The path should point to your Spike repository
-
-2. If build fails after updating Spike:
-   - Remove `.copy_files_stamp` from Spike directory
-   - Rerun `./src/spike_s2_demo.sh`
-
-3. For clean rebuild:
-   ```bash
-   make clean
-   ./src/spike_s2_demo.sh
-   make
-   ```
-
 
 
 ## External Simulator Integration Guide
@@ -302,28 +271,6 @@ s2_demo_proc spike_proc(&cfg);
 
 ### 3. Available APIs
 
-#### Memory Simulator Base Class APIs
-
-```cpp
-class memory_simulator {
-public:
-    // Core memory operations
-    void write(uint64_t addr, const uint8_t* data, size_t len);
-    void read(uint64_t addr, uint8_t* data, size_t len);
-    
-    // Program loading
-    std::map<std::string, uint64_t> load_elf_file(
-        const std::string& filename, 
-        uint64_t* entry_point = nullptr
-    );
-    void load_hex_file(const std::string& filename);
-    
-    // Memory management
-    uint64_t size() const;
-    void set_rom_contents();
-};
-```
-
 #### Spike Interface APIs
 
 ```cpp
@@ -332,25 +279,6 @@ public:
     // Required memory operations
     virtual bool load(reg_t addr, size_t len, uint8_t* bytes) = 0;
     virtual bool store(reg_t addr, size_t len, const uint8_t* bytes) = 0;
-};
-```
-
-#### Processor APIs
-
-```cpp
-class s2_demo_proc {
-public:
-    // Core operations
-    void reset();
-    void step(size_t n);
-    
-    // Debug and logging
-    void enable_debug(bool enable = true);
-    void configure_log(bool enable_log, bool enable_commitlog = false);
-    
-    // Accessors
-    processor_t* get_core(size_t i);
-    FILE* get_log_file();
 };
 ```
 
@@ -395,48 +323,4 @@ int main() {
 }
 ```
 
-### 5. Common Operations
 
-1. Loading Programs:
-```cpp
-// Load ELF file
-ext_sim.load_elf_file("program.elf");
-
-// Load HEX file
-ext_sim.load_hex_file("program.hex");
-```
-
-2. Memory Access:
-```cpp
-// Direct memory access
-uint8_t data[4];
-ext_sim.read(0x1000, data, 4);  // Read 4 bytes from address 0x1000
-ext_sim.write(0x1000, data, 4); // Write 4 bytes to address 0x1000
-```
-
-3. Debugging:
-```cpp
-// Enable debugging
-spike_proc.enable_debug();
-
-// Configure logging
-spike_proc.configure_log(true,  // Enable general logging
-                        false); // Disable commit log
-```
-
-### 6. Best Practices
-
-1. Memory Management:
-   - Always check memory bounds before access
-   - Use power-of-2 sizes for memory allocation
-   - Initialize memory regions properly
-
-2. Error Handling:
-   - Implement proper error checking in load/store operations
-   - Handle out-of-bounds access gracefully
-   - Log memory access errors for debugging
-
-3. Performance:
-   - Implement efficient memory access methods
-   - Consider using memory caching if appropriate
-   - Profile your simulator under different workloads
