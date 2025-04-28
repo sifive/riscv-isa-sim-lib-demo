@@ -51,6 +51,7 @@ cd - > /dev/null
 echo "This script will patch the following files in your Spike repository:"
 echo "1. softfloat/softfloat.mk.in"
 echo "2. riscv/riscv.mk.in"
+echo "3. riscv/mmu.h"
 #echo "3. riscv/encoding.h"
 #echo "4. riscv/csr_init.cc"
 echo "-----------------------------------"
@@ -69,7 +70,6 @@ if [ -f "${COPY_FILES_DIR}/softfloat.mk.in" ]; then
         echo "Error: Failed to copy softfloat.mk.in"
         exit 1
     }
-    echo "Copied softfloat.mk.in"
 fi
 
 # Copy all other files to riscv directory
