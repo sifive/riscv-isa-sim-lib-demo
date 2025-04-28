@@ -29,6 +29,9 @@ const reg_t PGMASK = ~(PGSIZE-1);
 #define MMU_OBSERVE_LOAD(addr, data, length)
 #endif
 
+#ifndef MMU_OBSERVE_STORE
+#define MMU_OBSERVE_STORE(addr, data, length)
+#endif
 
 struct insn_fetch_t
 {
@@ -101,9 +104,8 @@ public:
     if (unlikely(proc && proc->get_log_commits_enabled()))
       proc->state.log_mem_read.push_back(std::make_tuple(addr, 0, sizeof(T)));
 
-    T ret_val = from_target(res);
-    MMU_OBSERVE_LOAD(addr, ret_val,sizeof(T));
-    return ret_val;
+    MMU_OBSERVE_LOAD(addr,from_target(res),sizeof(T));
+    return from_target(res);
   }
 
   template<typename T>
@@ -144,6 +146,8 @@ public:
 
     if (unlikely(proc && proc->get_log_commits_enabled()))
       proc->state.log_mem_write.push_back(std::make_tuple(addr, val, sizeof(T)));
+
+      MMU_OBSERVE_STORE(addr, val, sizeof(T));
   }
 
   template<typename T>
@@ -225,7 +229,10 @@ public:
       throw trap_load_address_misaligned((proc) ? proc->state.v : false, addr, 0, 0);
     }
 
-    return (float128_t){load<uint64_t>(addr), load<uint64_t>(addr + 8)};
+    float128_t res;
+    res.v[0] = load<uint64_t>(addr);
+    res.v[1] = load<uint64_t>(addr + 8);
+    return res;
   }
 
   void cbo_zero(reg_t addr) {
@@ -298,8 +305,15 @@ public:
 
   template<typename T>
   T ALWAYS_INLINE fetch_jump_table(reg_t addr) {
-    auto tlb_entry = translate_insn_addr(addr);
-    return from_target(*(target_endian<T>*)(tlb_entry.host_offset + addr));
+    typedef std::remove_const<std::remove_pointer<decltype(translate_insn_addr_to_host(addr))>::type>::type U;
+    U parcels[sizeof(T) / sizeof(U)];
+
+    for (size_t i = 0; i < std::size(parcels); i++)
+      parcels[i] = *translate_insn_addr_to_host(addr + i * sizeof(U));
+
+    target_endian<T> res;
+    memcpy(&res, parcels, sizeof(T));
+    return from_target(res);
   }
 
   inline icache_entry_t* refill_icache(reg_t addr, icache_entry_t* entry)
@@ -335,17 +349,19 @@ public:
       entry->tag = -1;
       tracer.trace(paddr, length, FETCH);
     }
-    
+
     MMU_OBSERVE_FETCH(addr, insn, length);
-    
+
     return entry;
   }
 
   inline icache_entry_t* access_icache(reg_t addr)
   {
     icache_entry_t* entry = &icache[icache_index(addr)];
-    if (likely(entry->tag == addr))
+    if (likely(entry->tag == addr)){
+      MMU_OBSERVE_FETCH(addr, entry->data.insn, insn_length(entry->data.insn.bits()));
       return entry;
+    }
     return refill_icache(addr, entry);
   }
 
