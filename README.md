@@ -1,21 +1,91 @@
-# Spike S2 Demo
+# RISC-V ISA Simulator (Spike) as a Library Demo
 
-This project demonstrates integration of external simulator with Spike (RISC-V ISA Simulator). In this implementation, ALL memory operations (loads, stores, and instruction fetches) are handled by the external simulator, without any of Spike's internal memories.
+This project demonstrates how to use RISC-V ISA Simulator (Spike) as a library, integrating it with an external simulator. In this implementation, ALL memory operations (loads, stores, and instruction fetches) are handled by the external simulator, without any of Spike's internal memories.
 
-## Note on Spike Integration
-Spike is included as a Git submodule from the official RISC-V repository. After cloning this repository, initialize the submodule with:
+## Building
+
+### Step 1: Clone RISC-V ISA Simulator Repository
+First, clone the RISC-V ISA Simulator repository and checkout the required version:
 
 ```bash
-git submodule update --init --recursive
+git clone https://github.com/riscv-software-src/riscv-isa-sim.git
+cd riscv-isa-sim
+git checkout 488e07d75df85d4bb363076dbb40b45288a2fad0
+cd ..
 ```
 
-The build system will automatically copy necessary modified files from the `copy-files` directory into the Spike submodule before building. This ensures that all required customizations are applied without modifying the submodule directly.
+### Step 2: Set Environment Variable
+Set the environment variable to point to your RISC-V ISA Simulator repository:
+
+```bash
+export SPIKE_SOURCE_DIR=/path/to/riscv-isa-sim
+```
+
+### Step 3: Run Setup Script
+Run the setup script to patch simulator files:
+
+```bash
+./src/setup.sh
+```
+
+This script performs several critical tasks:
+- Verifies that `SPIKE_SOURCE_DIR` environment variable is set and valid
+- Validates repository SHA against expected version
+- Copies required modified files to simulator repository:
+  1. `softfloat/softfloat.mk.in`
+  2. `riscv/riscv.mk.in`
+  3. `riscv/encoding.h`
+  5. `riscv/mmu.h`
+
+The script creates a `.copy_files_stamp` file to track successful patching. If you need to repatch, remove this file and rerun the script.
+
+### Step 4: Build the Demo
+After the setup script completes successfully, build the project:
+
+```bash
+make
+```
+
+This will:
+1. Configure and build RISC-V ISA Simulator with required flags
+2. Install simulator libraries in local `spike_install` directory
+3. Build the demo application
+
+### Optional: Building with Memory Operation Hooks
+To enable memory operation observation/debugging, you can build with hooks enabled:
+
+```bash
+make USE_HOOKS=1
+```
+
+This will:
+- Include the `hooks.h` header automatically in the build
+- Enable printing of memory operations:
+  - Load operations: address, data, and length
+  - Fetch operations: address, instruction, and length
+
+## Project Structure
+
+```
+.
+├── riscv-isa-sim/      # RISC-V ISA Simulator (external)
+├── src/
+│   ├── copy-files/     # Modified simulator files for patching
+│   ├── processor.cc    # Custom processor implementation
+│   ├── processor.h     # Processor header
+│   ├── memory_simulator.h  # Memory simulator base class
+│   ├── memory_simulator.cc # Memory simulator implementation
+│   ├── main.cc        # Demo entry point
+│   └── setup.sh       # Setup script
+└── Makefile           # Build system
+```
 
 ## Components
 
 ### s2_demo_proc
-A custom processor implementation that inherits from Spike's `simif_t`. It provides minimal functionalities
-- it adds external simulator device to bus, as a fallback parameter. Check constructor of `s2_demo_proc` for details.
+A custom processor implementation that inherits from Spike's `simif_t`. It provides minimal functionalities:
+- Adds external simulator device to bus as a fallback parameter
+- Check constructor of `s2_demo_proc` for details
 
 ### Memory Simulator
 The memory simulation is structured with a base class and two implementation approaches:
@@ -31,6 +101,41 @@ Two different ways to integrate with Spike:
 2. `spike_bridge_t`: Bridge pattern implementation that wraps a `memory_simulator` instance
 
 Both approaches ensure that all memory accesses (including instruction fetches) are handled by the external simulator rather than Spike's internal memory.
+
+### Memory Simulator Integration Approaches
+
+The project provides two different ways to integrate the external memory simulator with Spike:
+
+#### 1. Memory Simulator Wrapper (`memory_simulator_wrapper`)
+Direct inheritance approach that combines `memory_simulator` and `abstract_sim_if_t`:
+
+```cpp
+class memory_simulator_wrapper : public memory_simulator, public abstract_sim_if_t {
+    public:
+        memory_simulator_wrapper(uint64_t size);
+        ~memory_simulator_wrapper() override;
+        bool load(reg_t addr, size_t len, uint8_t* bytes) override;
+        bool store(reg_t addr, size_t len, const uint8_t* bytes) override;
+};
+```
+
+This approach is straightforward and leverages C++ inheritance to create a single class that implements both the memory simulation logic and the Spike interface.
+
+#### 2. Spike Bridge (`spike_bridge_t`)
+Wrapper class that uses composition to integrate the memory simulator with Spike:
+
+```cpp
+class spike_bridge_t {
+    public:
+        spike_bridge_t(memory_simulator* sim);
+        bool load(reg_t addr, size_t len, uint8_t* bytes);
+        bool store(reg_t addr, size_t len, const uint8_t* bytes);
+    private:
+        memory_simulator* sim;
+};
+```
+
+This approach uses composition, where the `spike_bridge_t` class holds a pointer to a `memory_simulator` instance and forwards memory operations to it. This can be more flexible, as it allows for easier swapping of memory simulation implementations.
 
 ### Main Program
 `main.cc` demonstrates the usage:
@@ -56,61 +161,282 @@ spike_proc.configure_log(true, true);
 spike_proc.step(50);
 ```
 
-### Build System
-The Makefile first configures and builds Spike:
-- Configures Spike with proper flags (`-fPIC`, `-O2`, `-std=c++17`)
-- Builds and installs Spike libraries in `spike_install` directory
-- Provides required libraries:
+## Build System
+The Makefile configures and builds Spike with:
+- Proper flags (`-fPIC`, `-O2`, `-std=c++17`)
+- Required libraries:
   - `libriscv.a`
   - `libsoftfloat.a`
   - `libdisasm.a`
 
-Then configures the demo build environment with:
-- Integration with the built Spike libraries
-- C++17 standard compilation
-- Proper include paths for Spike integration
+## Troubleshooting
 
-## Modifications w.r.t. Spike Github
+1. If you see "SPIKE_SOURCE_DIR is not set" error:
+   - Make sure you've set the environment variable correctly
+   - The path should point to your Spike repository
 
-### Changes to Spike master
-Modified files (some of the files are expected to be updated in PR#1953):
-- `riscv/csr_init.cc`
-- `riscv/encoding.h`
-- `riscv/riscv.mk.in`
-- `softfloat/softfloat.mk.in`
+2. If build fails after updating Spike:
+   - Remove `.copy_files_stamp` from Spike directory
+   - Rerun `./src/spike_s2_demo.sh`
 
-## Building
+3. For clean rebuild:
+   ```bash
+   make clean
+   ./src/spike_s2_demo.sh
+   make
+   ```
 
-Before building, ensure you have initialized the Spike submodule as mentioned above.
 
-```bash
-make
+
+## External Simulator Integration Guide
+
+This section details the complete process of integrating an external simulator with Spike.
+
+### 1. Core Components Required
+
+1. Memory Simulator Implementation:
+   - Must inherit from `memory_simulator` base class
+   - Implements core memory operations
+   - Handles memory allocation and management
+
+2. Spike Interface:
+   - Must implement `abstract_sim_if_t` interface
+   - Handles communication between Spike and memory simulator
+   - Choose either wrapper or bridge approach
+
+3. Processor Configuration:
+   - Configure `s2_demo_proc` with external simulator
+   - Set up debugging and logging options
+
+### 2. Step-by-Step Integration
+
+#### Step 2.1: Implement Memory Simulator
+
+First, create your memory simulator by inheriting from the base class:
+
+```cpp
+class your_memory_simulator : public memory_simulator {
+public:
+    your_memory_simulator(uint64_t size) : memory_simulator(size) {
+        // Your initialization code
+    }
+
+    // Optional: Override base class methods if needed
+    void write(uint64_t addr, const uint8_t* data, size_t len) override {
+        // Your implementation
+    }
+
+    void read(uint64_t addr, uint8_t* data, size_t len) override {
+        // Your implementation
+    }
+};
 ```
-This will:
-1. Copy customized files from `copy-files` to the Spike submodule
-2. Configure and build Spike with required flags
-3. Install Spike libraries in local `spike_install` directory
-4. Build the demo application
 
-## Usage
+#### Step 2.2: Choose Integration Method
 
-```bash
-./spike_demo
+Either use Wrapper approach:
+
+```cpp
+class your_simulator_wrapper : public your_memory_simulator, 
+                             public abstract_sim_if_t {
+public:
+    your_simulator_wrapper(uint64_t size) 
+        : your_memory_simulator(size) {}
+
+    bool load(reg_t addr, size_t len, uint8_t* bytes) override {
+        read(addr, bytes, len);
+        return true;
+    }
+
+    bool store(reg_t addr, size_t len, const uint8_t* bytes) override {
+        write(addr, bytes, len);
+        return true;
+    }
+};
 ```
 
-The demo loads and executes a test ELF file ("return-pass.elf") with debug and logging enabled. By default, execution logs are written to (hardcoded)`out.txt`.
+Or Bridge approach:
 
-## Project Structure
+```cpp
+class your_simulator_bridge : public abstract_sim_if_t {
+private:
+    your_memory_simulator* sim;
+
+public:
+    your_simulator_bridge(your_memory_simulator* simulator) : sim(simulator) {}
+
+    bool load(reg_t addr, size_t len, uint8_t* bytes) override {
+        sim->read(addr, bytes, len);
+        return true;
+    }
+
+    bool store(reg_t addr, size_t len, const uint8_t* bytes) override {
+        sim->write(addr, bytes, len);
+        return true;
+    }
+};
 ```
-.
-├── riscv-isa-sim/      # Spike simulator (git submodule)
-├── copy-files/         # Modified Spike files to be copied during build
-├── s2_demo_proc.cc     # Custom processor implementation
-├── s2_demo_proc.h      # Processor header
-├── memory_simulator.h  # Memory simulator base class and implementations
-├── memory_simulator.cc # Memory simulator implementation
-└── main.cc            # Demo entry point
+
+#### Step 2.3: Configure Processor
+
+Set up the processor with your external simulator:
+
+```cpp
+// Create configuration
+cfg_t cfg;
+
+// Initialize your simulator
+#ifdef USE_BRIDGE
+    your_memory_simulator mem_sim(1024 * 1024 * 1024);
+    your_simulator_bridge ext_sim(&mem_sim);
+#else
+    your_simulator_wrapper ext_sim(1024 * 1024 * 1024);
+#endif
+
+// Set external simulator in configuration
+cfg.external_simulator = &ext_sim;
+
+// Create processor with configuration
+s2_demo_proc spike_proc(&cfg);
 ```
 
+### 3. Available APIs
 
+#### Memory Simulator Base Class APIs
 
+```cpp
+class memory_simulator {
+public:
+    // Core memory operations
+    void write(uint64_t addr, const uint8_t* data, size_t len);
+    void read(uint64_t addr, uint8_t* data, size_t len);
+    
+    // Program loading
+    std::map<std::string, uint64_t> load_elf_file(
+        const std::string& filename, 
+        uint64_t* entry_point = nullptr
+    );
+    void load_hex_file(const std::string& filename);
+    
+    // Memory management
+    uint64_t size() const;
+    void set_rom_contents();
+};
+```
+
+#### Spike Interface APIs
+
+```cpp
+class abstract_sim_if_t {
+public:
+    // Required memory operations
+    virtual bool load(reg_t addr, size_t len, uint8_t* bytes) = 0;
+    virtual bool store(reg_t addr, size_t len, const uint8_t* bytes) = 0;
+};
+```
+
+#### Processor APIs
+
+```cpp
+class s2_demo_proc {
+public:
+    // Core operations
+    void reset();
+    void step(size_t n);
+    
+    // Debug and logging
+    void enable_debug(bool enable = true);
+    void configure_log(bool enable_log, bool enable_commitlog = false);
+    
+    // Accessors
+    processor_t* get_core(size_t i);
+    FILE* get_log_file();
+};
+```
+
+### 4. Usage Example
+
+Complete example of setting up and using the external simulator:
+
+```cpp
+int main() {
+    // 1. Create configuration
+    cfg_t cfg;
+
+    // 2. Initialize external simulator
+    #ifdef USE_BRIDGE
+        your_memory_simulator mem_sim(1024 * 1024 * 1024);
+        your_simulator_bridge ext_sim(&mem_sim);
+    #else
+        your_simulator_wrapper ext_sim(1024 * 1024 * 1024);
+    #endif
+
+    // 3. Configure external simulator
+    cfg.external_simulator = &ext_sim;
+
+    // 4. Create and configure processor
+    s2_demo_proc spike_proc(&cfg);
+    spike_proc.reset();
+
+    // 5. Load program
+    ext_sim.load_elf_file("your_program.elf");
+
+    // 6. Configure debugging (optional)
+    spike_proc.enable_debug();
+    spike_proc.configure_log(true, false);
+
+    // 7. Run simulation
+    while (1) {
+        spike_proc.step(50);
+        // Add your simulation control logic here
+    }
+
+    return 0;
+}
+```
+
+### 5. Common Operations
+
+1. Loading Programs:
+```cpp
+// Load ELF file
+ext_sim.load_elf_file("program.elf");
+
+// Load HEX file
+ext_sim.load_hex_file("program.hex");
+```
+
+2. Memory Access:
+```cpp
+// Direct memory access
+uint8_t data[4];
+ext_sim.read(0x1000, data, 4);  // Read 4 bytes from address 0x1000
+ext_sim.write(0x1000, data, 4); // Write 4 bytes to address 0x1000
+```
+
+3. Debugging:
+```cpp
+// Enable debugging
+spike_proc.enable_debug();
+
+// Configure logging
+spike_proc.configure_log(true,  // Enable general logging
+                        false); // Disable commit log
+```
+
+### 6. Best Practices
+
+1. Memory Management:
+   - Always check memory bounds before access
+   - Use power-of-2 sizes for memory allocation
+   - Initialize memory regions properly
+
+2. Error Handling:
+   - Implement proper error checking in load/store operations
+   - Handle out-of-bounds access gracefully
+   - Log memory access errors for debugging
+
+3. Performance:
+   - Implement efficient memory access methods
+   - Consider using memory caching if appropriate
+   - Profile your simulator under different workloads
