@@ -1,5 +1,5 @@
 #include "s2_demo_proc.h"
-#include "riscv-isa-sim/riscv/mmu.h"
+#include "riscv/mmu.h"
 
 char* s2_demo_proc::addr_to_mem(reg_t paddr) {
   auto desc = bus->find_device(paddr >> PGSHIFT << PGSHIFT, PGSIZE);

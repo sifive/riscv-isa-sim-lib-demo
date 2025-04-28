@@ -1,5 +1,5 @@
 
-#include "riscv-isa-sim/riscv/processor.h"
+#include "riscv/processor.h"
 #include "riscv/simif.h"      // needed for base class
 #include "riscv/cfg.h"        // needed for cfg_t* in header
 #include "riscv/processor.h"  // needed for processor_t* in header
