@@ -8,7 +8,7 @@ $(error SPIKE_SOURCE_DIR is not set. Please set it to point to your Spike reposi
 endif
 
 # Directory definitions
-SPIKE_DIR = $(SPIKE_SOURCE_DIR)
+SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
 SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
 SPIKE_INSTALL_DIR = $(PWD)/spike_install
 SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
@@ -58,12 +58,33 @@ LDLIBS = \
     -latomic \
     $(SPIKE_LIBS)
 
+# Define base flags
+BASE_CFLAGS := -fPIC -O2
+BASE_CXXFLAGS := -fPIC -O2 -std=c++17
+
+# Capture original PWD at the start
+ORIG_PWD := $(shell pwd)
+# Add hooks.h if USE_HOOKS is defined
+ifdef USE_HOOKS
+    HOOK_FLAGS := -include $(ORIG_PWD)/hooks.h
+    BASE_CFLAGS += $(HOOK_FLAGS)
+    BASE_CXXFLAGS += $(HOOK_FLAGS)
+endif
+
 $(SPIKE_CONFIGURE_STAMP): check_prereqs
-	mkdir -p $(SPIKE_BUILD_DIR)
-	cd $(SPIKE_BUILD_DIR) && $(SPIKE_DIR)/configure --prefix=$(SPIKE_INSTALL_DIR) \
-		CFLAGS="-fPIC -O2" \
-		CXXFLAGS="-fPIC -O2 -std=c++17"
+	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
+		mkdir -p $(SPIKE_BUILD_DIR); \
+		cd $(SPIKE_BUILD_DIR) && $(SPIKE_DIR)/configure --prefix=$(SPIKE_INSTALL_DIR) \
+			CFLAGS="$(BASE_CFLAGS)" \
+			CXXFLAGS="$(BASE_CXXFLAGS)" \
+			--with-cxx-standard=17; \
+	fi
 	touch $(SPIKE_CONFIGURE_STAMP)
+
+# Regular (non-PHONY) target
+spike_build: $(SPIKE_CONFIGURE_STAMP)
+	$(MAKE) -C $(SPIKE_BUILD_DIR)
+	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
 # Rule to build Spike
 .PHONY: force_spike_build
@@ -71,7 +92,7 @@ force_spike_build: $(SPIKE_CONFIGURE_STAMP)
 	$(MAKE) -C $(SPIKE_BUILD_DIR)
 	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
-$(SPIKE_LIBS): force_spike_build
+$(SPIKE_LIBS): spike_build
 
 # Compilation rule
 %.o: %.cc
