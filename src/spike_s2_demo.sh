@@ -52,8 +52,6 @@ echo "This script will patch the following files in your Spike repository:"
 echo "1. softfloat/softfloat.mk.in"
 echo "2. riscv/riscv.mk.in"
 echo "3. riscv/mmu.h"
-#echo "3. riscv/encoding.h"
-#echo "4. riscv/csr_init.cc"
 echo "-----------------------------------"
 
 # Copy files from copy-files directory
