@@ -1,4 +1,18 @@
-#include "s2_demo_proc.h"
+// Copyright 2025 SiFive
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include "demo_core.h"
 #include "memory_simulator.h"
 #include "riscv/cfg.h"
 #include <filesystem>
@@ -9,7 +23,7 @@ int main() {
     // configuration time
     cfg_t cfg;
     
-    cfg.isa = "rv64imafdcvh_zba_zbb_zbs_zcb_zcmop_zicond_zkr_zfa_zfbfmin_zfh_zkt_zicbop_zicbom_zicboz_zicfiss_zicfilp_zimop_zawrs_zifencei_zicsr_zihintpause_zihintntl_zicntr_zihpm_zvl1024b_zvfh_zvfbfmin_zvfbfwma_zvbb_zvkt_smcsrind_sscsrind_smrnmi";  // Standard RV64GC ISA
+    cfg.isa = "rv64imafdcv";  // Standard RV64GC ISA
     cfg.priv = "MSU";        // Machine, Supervisor, and User privilege levels
     cfg.misaligned = false;  // Don't allow misaligned memory accesses
     cfg.endianness = endianness_little;  // Little endian
