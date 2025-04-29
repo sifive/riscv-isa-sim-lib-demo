@@ -74,10 +74,11 @@ endif
 $(SPIKE_CONFIGURE_STAMP): check_prereqs
 	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
 		mkdir -p $(SPIKE_BUILD_DIR); \
-		cd $(SPIKE_BUILD_DIR) && $(SPIKE_DIR)/configure --prefix=$(SPIKE_INSTALL_DIR) \
+		cd $(SPIKE_BUILD_DIR) && \
+		CXXFLAGS="$(BASE_CXXFLAGS)" $(SPIKE_DIR)/configure \
+			--prefix=$(SPIKE_INSTALL_DIR) \
 			CFLAGS="$(BASE_CFLAGS)" \
-			CXXFLAGS="$(BASE_CXXFLAGS)" \
-			--with-cxx-standard=17; \
+			CXXFLAGS="$(BASE_CXXFLAGS)"; \
 	fi
 	touch $(SPIKE_CONFIGURE_STAMP)
 
