@@ -68,7 +68,6 @@ public:
         uint64_t nr = addr >> lower_width;
         assert(nr < page_count);
         if(arr[nr] == nullptr) {
-            printf("sparse array is creating new page. page nr: %lu\n", nr);
             arr[nr] = new page_type();
         }
         return arr[nr]->at(addr & page_addr_mask);
@@ -116,7 +115,6 @@ public:
             const uint32_t page_nr = start_addr / page_size;
             assert(page_nr < page_count);
             if (arr.at(page_nr) == nullptr) {
-                printf("sparse array is creating new page @ %lu\n", page_nr);
                 arr.at(page_nr) = new page_type();
             }
             page_type& page = *(arr.at(page_nr));
@@ -149,7 +147,6 @@ public:
         const uint32_t page_nr = addr / page_size;
         assert(page_nr < page_count);
         if (arr.at(page_nr) == nullptr) {
-            printf("sparse array is creating new page @ %lu\n", page_nr);
             arr.at(page_nr) = new page_type();
         }
         page_type& page = *(arr.at(page_nr));
