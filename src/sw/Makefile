@@ -11,18 +11,15 @@ CFLAGS += -std=c11
 CFLAGS += -Wall
 CFLAGS += -Wno-unused-label
 CFLAGS += -Os
-CFLAGS += -march=rv64imafdcvh_zba_zbb_zbs_zcb_zcmop_zicond_zfa_zfh_zkt_zicbop_zicbom_zicboz_zimop_zawrs_zifencei_zicsr_zihintpause_zihintntl_ziccif_ziccamoa_ziccrse_zihpm_za64rs_zic64b_zvl1024b_zvfh_zvfbfmin_zvbb_ss1p13_svbare_smaia_ssaia_smstateen_ssstateen_smrnmi_sscofpmf_sscounterenw_svade_ssccptr_sstvecd_sstvala_ssu64xl_svinval_svnapot_svpbmt_shcounterenw_shvstvecd_shtvala_shvstvala_shvsatpa_shgatpa_xsfvqmaccqoq_xsfvfnrclipxfqf_xsfvqdotq_xsfvfexpa_xsifivecdiscarddlone_xsifivecflushdlone_xsfcease0p1_xsfvfwmaccqqq_xsfvcp
+CFLAGS += -march=rv64imafdcv
 CFLAGS += -fno-integrated-as
-CFLAGS += -mcpu=sifive-x390
-CFLAGS += -menable-experimental-extensions
 
 # Assembler
 ASFLAGS += -c
 ASFLAGS += -std=c11
 ASFLAGS += -Os
 ASFLAGS += -Wall
-ASFLAGS += -march=rv64imafdcvh_zba_zbb_zbs_zcb_zcmop_zicond_zfa_zfh_zkt_zicbop_zicbom_zicboz_zimop_zawrs_zifencei_zicsr_zihintpause_zihintntl_ziccif_ziccamoa_ziccrse_zihpm_za64rs_zic64b_zvl1024b_zvfh_zvfbfmin_zvbb_ss1p13_svbare_smaia_ssaia_smstateen_ssstateen_smrnmi_sscofpmf_sscounterenw_svade_ssccptr_sstvecd_sstvala_ssu64xl_svinval_svnapot_svpbmt_shcounterenw_shvstvecd_shtvala_shvstvala_shvsatpa_shgatpa_xsfvqmaccqoq_xsfvfnrclipxfqf_xsfvqdotq_xsfvfexpa_xsifivecdiscarddlone_xsifivecflushdlone_xsfcease0p1_xsfvfwmaccqqq_xsfvcp
-ASFLAGS += -menable-experimental-extensions
+ASFLAGS += -march=rv64imafdcv
 
 # Linker directives.
 LFLAGS += -Wall
@@ -56,5 +53,5 @@ all: main.lst main.elf
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) *.o *.elf *.bin *.lst counters.hex *.vcd out.hex
+	rm -f $(OBJS) *.o *.elf *.bin *.lst out.hex
 

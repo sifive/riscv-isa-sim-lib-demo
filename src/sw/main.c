@@ -17,10 +17,10 @@ static inline unsigned cpu_get_current_hartid() {
 }
 
 __attribute__((noinline)) void task_load_add () {
-  const int * start = (const int *) 0x40000000; // core local data
+  const int * const start = (const int *) 0x40000000; // core local data
   const int length = 30;
   int len = length;
-  int * src = start;
+  const int * src = start;
 
   vint32m2_t sum;
   while (len > 0) {
@@ -32,7 +32,7 @@ __attribute__((noinline)) void task_load_add () {
   }
 
   size_t vl1 = __riscv_vsetvl_e32m2(length);
-  vint32m1_t final_sum;
+  vint32m1_t final_sum = __riscv_vmv_v_x_i32m1(0, 1);  // Initialize with scalar value 0
   final_sum = __riscv_vredsum_vs_i32m2_i32m1(sum, final_sum, vl1);
 
   size_t vl2 = __riscv_vsetvl_e32m1(1);

@@ -1,0 +1,93 @@
+
+main.elf:     file format elf64-littleriscv
+main.elf
+architecture: riscv:rv64, flags 0x00000112:
+EXEC_P, HAS_SYMS, D_PAGED
+start address 0x0000000020000000
+
+Program Header:
+0x70000003 off    0x0000000000001090 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**0
+         filesz 0x00000000000000b4 memsz 0x0000000000000000 flags r--
+    LOAD off    0x0000000000001000 vaddr 0x0000000020000000 paddr 0x0000000020000000 align 2**12
+         filesz 0x0000000000000090 memsz 0x0000000000000090 flags r-x
+   STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**4
+         filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
+
+Sections:
+Idx Name              Size      VMA               LMA               File off  Algn  Flags
+  0 .text             00000088  0000000020000000  0000000020000000  00001000  2**2  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .rodata           00000008  0000000020000088  0000000020000088  00001088  2**3  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  2 .riscv.attributes 000000b4  0000000000000000  0000000000000000  00001090  2**0  CONTENTS, READONLY
+  3 .comment          0000002f  0000000000000000  0000000000000000  00001144  2**0  CONTENTS, READONLY
+SYMBOL TABLE:
+0000000020000000 l    d  .text	0000000000000000 .text
+0000000020000088 l    d  .rodata	0000000000000000 .rodata
+0000000000000000 l    d  .riscv.attributes	0000000000000000 .riscv.attributes
+0000000000000000 l    d  .comment	0000000000000000 .comment
+0000000000000000 l    df *ABS*	0000000000000000 start.o
+0000000000000000 l    df *ABS*	0000000000000000 main.c
+0000000020000088 g     O .rodata	0000000000000008 p_finisher
+0000000020000000 g       .text	0000000000000000 _start
+0000000020000054 g     F .text	0000000000000034 main
+000000002000004e g     F .text	0000000000000006 task_wfi
+0000000020000018 g     F .text	0000000000000036 task_load_add
+
+
+
+Disassembly of section .text:
+
+0000000020000000 <_start>:
+_start():
+    20000000:	00801137          	lui	sp,0x801
+    20000004:	0122                	sll	sp,sp,0x8
+    20000006:	42cd                	li	t0,19
+    20000008:	02a6                	sll	t0,t0,0x9
+    2000000a:	3002a073          	csrs	mstatus,t0
+    2000000e:	00000097          	auipc	ra,0x0
+    20000012:	046080e7          	jalr	70(ra) # 20000054 <main>
+    20000016:	a001                	j	20000016 <_start+0x16>
+
+0000000020000018 <task_load_add>:
+task_load_add():
+    20000018:	40000537          	lui	a0,0x40000
+    2000001c:	45f9                	li	a1,30
+    2000001e:	0d15f657          	vsetvli	a2,a1,e32,m2,ta,ma
+    20000022:	02056507          	vle32.v	v10,(a0)
+    20000026:	02a40457          	vadd.vv	v8,v10,v8
+    2000002a:	9d91                	subw	a1,a1,a2
+    2000002c:	060a                	sll	a2,a2,0x2
+    2000002e:	9532                	add	a0,a0,a2
+    20000030:	feb047e3          	bgtz	a1,2000001e <task_load_add+0x6>
+    20000034:	cd1f7057          	vsetivli	zero,30,e32,m2,ta,ma
+    20000038:	42006557          	vmv.s.x	v10,zero
+    2000003c:	02852457          	vredsum.vs	v8,v8,v10
+    20000040:	cd00f057          	vsetivli	zero,1,e32,m1,ta,ma
+    20000044:	40000537          	lui	a0,0x40000
+    20000048:	02056427          	vse32.v	v8,(a0)
+    2000004c:	8082                	ret
+
+000000002000004e <task_wfi>:
+task_wfi():
+    2000004e:	10500073          	wfi
+    20000052:	8082                	ret
+
+0000000020000054 <main>:
+main():
+    20000054:	1141                	add	sp,sp,-16 # 800ff0 <_start-0x1f7ff010>
+    20000056:	e406                	sd	ra,8(sp)
+    20000058:	f1402573          	csrr	a0,mhartid
+    2000005c:	2501                	sext.w	a0,a0
+    2000005e:	c511                	beqz	a0,2000006a <main+0x16>
+    20000060:	00000097          	auipc	ra,0x0
+    20000064:	fee080e7          	jalr	-18(ra) # 2000004e <task_wfi>
+    20000068:	a029                	j	20000072 <main+0x1e>
+    2000006a:	00000097          	auipc	ra,0x0
+    2000006e:	fae080e7          	jalr	-82(ra) # 20000018 <task_load_add>
+    20000072:	0ff0000f          	fence
+    20000076:	6515                	lui	a0,0x5
+    20000078:	55550513          	add	a0,a0,1365 # 5555 <_start-0x1fffaaab>
+    2000007c:	3fffb5b7          	lui	a1,0x3fffb
+    20000080:	c588                	sw	a0,8(a1)
+    20000082:	0001                	nop
+    20000084:	0001                	nop
+    20000086:	bff5                	j	20000082 <main+0x2e>
