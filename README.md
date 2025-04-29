@@ -173,26 +173,27 @@ In both approaches we need to define `load` and `store` methods from `abstract_s
 ### Main Program
 `main.cc` demonstrates the usage:
 ```cpp
-// Choose implementation method at compile time
-#ifdef USE_BRIDGE
-    memory_simulator mem_sim(1024 * 1024 * 1024, START_PC);
-    spike_bridge_t ext_sim(&mem_sim);
-#else
+int main() {
+    // Configuration
+    cfg_t cfg;
+    // ...
     memory_simulator_wrapper ext_sim(1024 * 1024 * 1024, START_PC);
-#endif
+    // ...
+    cfg.external_simulator = &ext_sim;
 
-// Initialize and configure processor
-s2_demo_proc spike_proc(&cfg);
-spike_proc.reset();
-ext_sim.load_elf_file("return-pass.elf");
+    s2_demo_proc spike_proc(&cfg);
 
-// Enable debugging features
-spike_proc.enable_debug();
-spike_proc.configure_log(true, true);
+    // Runtime
+    spike_proc.reset();
+    // ...
+    while (1)
+        spike_proc.step(50);
 
-// Run simulation, execute 50 instructions
-spike_proc.step(50);
+    return 0;
+}
 ```
+In main.cc, we create an instance of `memory_simulator_wrapper` and assign it to the `external_simulator` field in the `cfg_t` object. This allows the riscv-isa-sim to interact with our external memory simulator.
+If you want to use `spike_bridge_t` instead, you can add `#define USE_BRIDGE` before including `memory_simulator.h` in `main.cc`.
 
 
 
