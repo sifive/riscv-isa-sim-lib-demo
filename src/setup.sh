@@ -55,7 +55,7 @@ echo "3. riscv/mmu.h"
 echo "-----------------------------------"
 
 # Copy files from copy-files directory
-SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 COPY_FILES_DIR="${SCRIPT_DIR}/copy-files"
 if [ ! -d "${COPY_FILES_DIR}" ]; then
     echo "Error: ${COPY_FILES_DIR} directory not found"
