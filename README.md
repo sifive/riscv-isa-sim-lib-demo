@@ -9,14 +9,16 @@ In this demonstration, external simulator is a simple memory simulator. In our u
 Several parameters are hardcoded in `src/main.cc`:
 - Start PC: `0x20000000`
 - Memory size: 1GB (1024 * 1024 * 1024 bytes)
-- ISA string: "rv64imafdcvh_zba_zbb_zbs_zcb_zcmop_zicond_zkr_zfa_zfbfmin_zfh_zkt_zicbop_zicbom_zicboz_zicfiss_zicfilp_zimop_zawrs_zifencei_zicsr_zihintpause_zihintntl_zicntr_zihpm_zvl1024b_zvfh_zvfbfmin_zvfbfwma_zvbb_zvkt_smcsrind_sscsrind_smrnmi"
+- ISA string: "rv64imafdcv"
 - Privilege levels: "MSU" (Machine, Supervisor, and User)
-- CPU runs sw from `src/sw/` folder. Check `src/sw/README.md` for more details
+- CPU runs sw `src/sw/main.elf`. Check `src/sw/README.md` for more details. 
 
 ### Program Termination
 The program will terminate with either:
 - "PASS" message: When the test program writes `0x5555` to the finisher address
 - "FAIL with status {x}" message: When any other non-zero value is written to the finisher address
+
+In both cases, when detected write to finisher address, `memory_simulator` will print the message, call `assert(0)` and terminate.
 
 ## Steps to Build the Project
 
@@ -64,6 +66,8 @@ make
 ```
 Note: We are forcing C++17 standard in the Makefile
 
+The build process produces an executable named `demo` in the `src` directory.
+
 ### Optional: Building with Memory Operation Hooks
 To enable memory operation observation/debugging, you can build with observability hooks enabled:
 
@@ -77,14 +81,22 @@ This will:
   - Load operations: address, data, and length
   - Fetch operations: address, instruction, and length
 
-### Step 5. compile sw
+### (Optional) Step 5: compile sw
 
-Our small example software is in `src/sw` folder. Elf file is hardcoded in `main.cc`
+Our small example software is in `src/sw` folder. Elf filename is hardcoded in `main.cc`
 
 ```bash
 cd src/sw
 # follow instructions in sw/README.md
 make
+```
+
+This step is optional because we have added a precompiled elf file in `src/sw/main.elf`
+
+### Step 6: Run the Demo
+Run the compiled demo:
+```bash
+./src/demo
 ```
 
 ## Adding External Simulator API
@@ -106,10 +118,10 @@ Usage is in `main.cc`
 cfg.external_simulator = &ext_sim;
 ```
 
-### s2_demo_proc
+### demo_core
 A custom processor implementation that inherits from riscv-isa-sim's `simif_t`.
 Since recently, `bus_t` has a fallback parameter, in case no device is found on the bus, request is forwarded to the fallback device. In our case it is the external simulator. 
-Example is in constructor of `s2_demo_proc`
+Example is in constructor of `demo_core`
 ```cpp
 if (cfg->external_simulator.has_value()) {
     auto* ext_sim = cfg->external_simulator.value();
@@ -145,7 +157,7 @@ We have a base class and two implementation approaches:
 
 Two different ways to integrate with riscv-isa-sim:
 1. `memory_simulator_wrapper`: Inherits from both `memory_simulator` and `abstract_sim_if_t`
-2. `spike_bridge_t`: Bridge pattern implementation that wraps a `memory_simulator` instance
+2. `memory_sim_bridge`: Bridge pattern implementation that wraps a `memory_simulator` instance
 
 #### 1. Memory Simulator Wrapper (`memory_simulator_wrapper`)
 Direct inheritance approach that combines `memory_simulator` and `abstract_sim_if_t`:
@@ -160,15 +172,15 @@ class memory_simulator_wrapper : public memory_simulator, public abstract_sim_if
 };
 ```
 
-This approach is straightforward and leverages C++ inheritance to create a single class that implements both the memory simulation logic and the Spike interface.
+It is typically used technique to make a wrapper class when integration with some other library is needed. 
 
-#### 2. Spike Bridge (`spike_bridge_t`)
+#### 2. Bridge (`memory_sim_bridge`)
 Wrapper class that uses composition to integrate the memory simulator with riscv-isa-sim:
 
 ```cpp
-class spike_bridge_t {
+class memory_sim_bridge {
     public:
-        spike_bridge_t(memory_simulator* sim);
+        memory_sim_bridge(memory_simulator* sim);
         bool load(reg_t addr, size_t len, uint8_t* bytes);
         bool store(reg_t addr, size_t len, const uint8_t* bytes);
     private:
@@ -176,8 +188,9 @@ class spike_bridge_t {
 };
 ```
 
-This approach uses composition, where the `spike_bridge_t` class holds a pointer to a `memory_simulator` instance and forwards memory operations to it.
-In both approaches we need to define `load` and `store` methods from `abstract_sim_if_t` interface.
+This approach uses composition, where the `memory_sim_bridge` class holds a pointer to a `memory_simulator` instance and forwards memory operations to it.
+
+Note: In both approaches we need to define `load` and `store` methods from `abstract_sim_if_t` interface.
 
 ### Main Program Flow
 
@@ -197,7 +210,7 @@ The main program (`src/main.cc`) demonstrates how to set up and run the RISC-V s
    ```cpp
    memory_simulator_wrapper ext_sim(1024 * 1024 * 1024, START_PC);
    ```
-In case you want to use `spike_bridge_t` instead of `memory_simulator_wrapper`, you need to define `#define USE_BRIDGE 1` before `main()`.
+In case you want to use `memory_sim_bridge` instead of `memory_simulator_wrapper`, you need to define `#define USE_BRIDGE 1` before `main()`.
 
 3. **External Simulator Integration**
    ```cpp
@@ -206,14 +219,14 @@ In case you want to use `spike_bridge_t` instead of `memory_simulator_wrapper`, 
 
 4. **Processor Creation**
    ```cpp
-   s2_demo_proc spike_proc(&cfg);
+   demo_core demo_riscv_core(&cfg);
    ```
 
 5. **Runtime Execution**
    ```cpp
-   spike_proc.reset();
+   demo_riscv_core.reset();
    while (1)
-       spike_proc.step(5000);
+       demo_riscv_core.step(5000);
    ```
 
 
