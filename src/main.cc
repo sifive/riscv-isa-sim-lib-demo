@@ -34,12 +34,13 @@ int main() {
     // this is runtime from this point
     // first reset and load elf
     spike_proc.reset();
-    // load elf
     if (!std::filesystem::exists("sw/main.elf")) {
         std::cerr << "Error: sw/main.elf not found. Please build the software first.\n";
         exit(1);
     }
-    ext_sim.load_elf_file("sw/main.elf");
+    uint64_t entry_point;
+    ext_sim.load_elf_file("sw/main.elf", &entry_point);
+    assert(entry_point == START_PC);
     // enable debugging features
     spike_proc.enable_debug();
     spike_proc.configure_log(true, false);
