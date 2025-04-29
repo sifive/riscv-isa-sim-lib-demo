@@ -1,11 +1,26 @@
 # RISC-V ISA Simulator (Spike) as a Library Demo
 
-This project demonstrates how to use RISC-V ISA Simulator (Spike) as a library, integrating it with an external simulator. In this implementation, ALL memory operations (loads, stores, and instruction fetches) are handled by the external simulator, without any of Spike's internal memories.
+This project demonstrates how to use [RISC-V ISA Simulator](https://github.com/riscv-software-src/riscv-isa-sim) as a library, and integrate it with an external simulator. 
+In this implementation, ALL memory operations (loads, stores, and instruction fetches) are handled by the external simulator, without any of Spike's internal memories.
 
-## Building
+## Important Notes
+
+### Hardcoded Parameters
+Several parameters are hardcoded in `src/main.cc`:
+- Start PC: `0x20000000`
+- Memory size: 1GB (1024 * 1024 * 1024 bytes)
+- ISA string: "rv64imafdcvh_zba_zbb_zbs_zcb_zcmop_zicond_zkr_zfa_zfbfmin_zfh_zkt_zicbop_zicbom_zicboz_zicfiss_zicfilp_zimop_zawrs_zifencei_zicsr_zihintpause_zihintntl_zicntr_zihpm_zvl1024b_zvfh_zvfbfmin_zvfbfwma_zvbb_zvkt_smcsrind_sscsrind_smrnmi"
+- Privilege levels: "MSU" (Machine, Supervisor, and User)
+
+### Program Termination
+The program will terminate with either:
+- "PASS" message: When the test program writes `0x5555` to the finisher address
+- "FAIL with status {x}" message: When any other non-zero value is written to the finisher address
+
+## Steps to Build the Project
 
 ### Step 1: Clone RISC-V ISA Simulator Repository
-First, clone the RISC-V ISA Simulator repository and checkout the required version:
+Clone the RISC-V ISA Simulator repository and checkout the required version:
 
 ```bash
 git clone https://github.com/riscv-software-src/riscv-isa-sim.git
@@ -36,7 +51,7 @@ This script performs several critical tasks:
   2. `riscv/riscv.mk.in`
   3. `riscv/mmu.h`
 Those 3 files should be upsteamed to riscv-isa-sim Github soon.
-PRs are already made (PR1) [https://github.com/riscv-software-src/riscv-isa-sim/pull/1968] and (PR2) [https://github.com/riscv-software-src/riscv-isa-sim/pull/1969]
+PRs are already made [PR 1968](https://github.com/riscv-software-src/riscv-isa-sim/pull/1968) and [PR 1969](https://github.com/riscv-software-src/riscv-isa-sim/pull/1969)
 
 The script creates a `.copy_files_stamp` file to track successful patching. If you need to repatch, remove this file and rerun the script.
 
@@ -46,9 +61,10 @@ After the setup script completes successfully, build the project:
 ```bash
 make
 ```
+Note: We are forcing C++17 standard in the Makefile
 
 ### Optional: Building with Memory Operation Hooks
-To enable memory operation observation/debugging, you can build with hooks enabled:
+To enable memory operation observation/debugging, you can build with observability hooks enabled:
 
 ```bash
 make USE_HOOKS=1
@@ -59,22 +75,6 @@ This will:
 - Enable printing of memory operations:
   - Load operations: address, data, and length
   - Fetch operations: address, instruction, and length
-
-## Project Structure
-
-```
-.
-├── riscv-isa-sim/      # RISC-V ISA Simulator (external)
-├── src/
-│   ├── copy-files/     # Modified simulator files for patching
-│   ├── processor.cc    # Custom processor implementation
-│   ├── processor.h     # Processor header
-│   ├── memory_simulator.h  # Memory simulator base class
-│   ├── memory_simulator.cc # Memory simulator implementation
-│   ├── main.cc        # Demo entry point
-│   └── setup.sh       # Setup script
-└── Makefile           # Build system
-```
 
 ## Components
 
