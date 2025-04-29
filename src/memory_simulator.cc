@@ -131,6 +131,6 @@ bool spike_bridge_t::store(reg_t addr, size_t len, const uint8_t* bytes) {
     return true;
 }
 
-void spike_bridge_t::load_elf_file(const std::string& filename) {
-    sim->load_elf_file(filename);
+void spike_bridge_t::load_elf_file(const std::string& filename, uint64_t* entry_point) {
+    sim->load_elf_file(filename, entry_point);
 }

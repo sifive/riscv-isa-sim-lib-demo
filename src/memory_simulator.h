@@ -53,7 +53,7 @@ public:
     bool load(reg_t addr, size_t len, uint8_t* bytes) override;
     bool store(reg_t addr, size_t len, const uint8_t* bytes) override;
 
-    void load_elf_file(const std::string& filename);
+    void load_elf_file(const std::string& filename, uint64_t* entry_point = nullptr);
 
 private:
     memory_simulator* sim;
