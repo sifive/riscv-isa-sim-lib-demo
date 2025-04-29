@@ -2,9 +2,9 @@ src/out.txt
 src/main.o
 src/main.d
 src/spike_install
-src/spike_demo
-src/s2_demo_proc.d
-src/s2_demo_proc.o
+src/demo
+src/demo_core.d
+src/demo_core.o
 src/memory_simulator.o
 src/memory_simulator.d
 .vscode
