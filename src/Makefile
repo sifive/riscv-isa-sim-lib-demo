@@ -1,4 +1,4 @@
-default: check_prereqs spike_demo
+default: check_prereqs demo
 
 .SECONDARY:
 
@@ -34,7 +34,7 @@ SPIKE_LIBS = $(SPIKE_INSTALL_DIR)/lib/libriscv.a \
 
 # Source files
 CPPLIST = \
-    s2_demo_proc.cc \
+    demo_core.cc \
     main.cc \
     memory_simulator.cc
 
@@ -102,7 +102,7 @@ $(SPIKE_LIBS): spike_build
 # Link rules
 CORE_OBJS = $(OBJS)
 
-spike_demo: $(CORE_OBJS) $(SPIKE_LIBS)
+demo: $(CORE_OBJS) $(SPIKE_LIBS)
 	$(CXX) $(LDFLAGS) $(CORE_OBJS) -o $@ $(LDLIBS)
 
 -include $(DEPS)
@@ -114,7 +114,7 @@ clean_spike:
 	rm -f $(SPIKE_CONFIGURE_STAMP)
 
 clean: clean_spike
-	rm -f $(OBJS) $(DEPS) spike_demo
+	rm -f $(OBJS) $(DEPS) demo
 
 reconfigure_spike: clean_spike $(SPIKE_CONFIGURE_STAMP)
 

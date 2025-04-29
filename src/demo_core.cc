@@ -1,7 +1,7 @@
-#include "s2_demo_proc.h"
+#include "demo_core.h"
 #include "riscv/mmu.h"
 
-char* s2_demo_proc::addr_to_mem(reg_t paddr) {
+char* demo_core::addr_to_mem(reg_t paddr) {
   auto desc = bus->find_device(paddr >> PGSHIFT << PGSHIFT, PGSIZE);
   if (auto mem = dynamic_cast<abstract_mem_t*>(desc.second))
     if (paddr - desc.first < mem->size())
@@ -11,7 +11,7 @@ char* s2_demo_proc::addr_to_mem(reg_t paddr) {
 }
 
 
-void s2_demo_proc::set_rom()
+void demo_core::set_rom()
 {
   const int reset_vec_size = 8;
 
@@ -42,7 +42,7 @@ void s2_demo_proc::set_rom()
   bus->add_device(DEFAULT_RSTVEC, boot_rom.get());
 }
 
-s2_demo_proc::s2_demo_proc(const cfg_t* cfg):
+demo_core::demo_core(const cfg_t* cfg):
     cfg(cfg)
 {
     abstract_device_t* bus_fallback = nullptr;
@@ -72,41 +72,41 @@ s2_demo_proc::s2_demo_proc(const cfg_t* cfg):
     }
 }
 
-s2_demo_proc::~s2_demo_proc() {
+demo_core::~demo_core() {
 }
 
-bool s2_demo_proc::reservable(reg_t paddr) { 
+bool demo_core::reservable(reg_t paddr) { 
     return true; 
 }
 
-bool s2_demo_proc::mmio_fetch(reg_t paddr, size_t len, uint8_t* bytes) {
+bool demo_core::mmio_fetch(reg_t paddr, size_t len, uint8_t* bytes) {
     // printf("mmio_fetch address: %lx\n"); 
     return bus->load(paddr, len, bytes); 
 }
 
-bool s2_demo_proc::mmio_load(reg_t paddr, size_t len, uint8_t* bytes) { 
+bool demo_core::mmio_load(reg_t paddr, size_t len, uint8_t* bytes) { 
     // printf("mmio_load address: %lx\n");
     return bus->load(paddr, len, bytes); 
 }
 
-bool s2_demo_proc::mmio_store(reg_t paddr, size_t len, const uint8_t* bytes) { 
+bool demo_core::mmio_store(reg_t paddr, size_t len, const uint8_t* bytes) { 
     // printf("mmio_store address: %lx\n");
     return bus->store(paddr, len, bytes); 
 }
 
-const std::map<size_t, processor_t*>& s2_demo_proc::get_harts() const { 
+const std::map<size_t, processor_t*>& demo_core::get_harts() const { 
     return harts; 
 }
 
-void s2_demo_proc::proc_reset(unsigned id) { 
+void demo_core::proc_reset(unsigned id) { 
     // TODO 
 }
 
-const cfg_t& s2_demo_proc::get_cfg() const { 
+const cfg_t& demo_core::get_cfg() const { 
     return *cfg; 
 }
 
-const char* s2_demo_proc::get_symbol(uint64_t paddr) {
+const char* demo_core::get_symbol(uint64_t paddr) {
     for(const auto& [name, addr] : symbols) {
         if(addr == paddr) {
             return name.c_str();
@@ -115,30 +115,30 @@ const char* s2_demo_proc::get_symbol(uint64_t paddr) {
     return nullptr;
 }
 
-processor_t* s2_demo_proc::get_core(size_t i) { 
+processor_t* demo_core::get_core(size_t i) { 
     return procs.at(i); 
 }
 
-void s2_demo_proc::reset() {
+void demo_core::reset() {
     for(auto& proc : procs) {
         proc->reset();
     }
 }
 
-void s2_demo_proc::step(size_t n) {
+void demo_core::step(size_t n) {
     for(auto& proc : procs) {
         proc->step(n);
     }
 }
 
-void s2_demo_proc::enable_debug(bool enable) {
+void demo_core::enable_debug(bool enable) {
     debug = enable;
     for (auto& proc : procs) {
         proc->set_debug(enable);
     }
 }
 
-void s2_demo_proc::configure_log(bool enable_log, bool enable_commitlog) {
+void demo_core::configure_log(bool enable_log, bool enable_commitlog) {
     log = enable_log;
     if (enable_commitlog) {
         for (auto& proc : procs) {
@@ -147,6 +147,6 @@ void s2_demo_proc::configure_log(bool enable_log, bool enable_commitlog) {
     }
 }
 
-FILE* s2_demo_proc::get_log_file() { 
+FILE* demo_core::get_log_file() { 
     return log_file.get(); 
 }

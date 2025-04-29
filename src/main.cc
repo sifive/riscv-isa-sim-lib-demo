@@ -21,19 +21,19 @@ int main() {
     // creating external simulator
     #ifdef USE_BRIDGE
     memory_simulator mem_sim(1024 * 1024 * 1024, START_PC);
-    spike_bridge_t ext_sim(&mem_sim);
+    memory_sim_bridge ext_sim(&mem_sim);
     #else
     memory_simulator_wrapper ext_sim(1024 * 1024 * 1024, START_PC); // TODO: update naming
     #endif
     // setting cfg field from external simulator
     cfg.external_simulator = &ext_sim;
 
-    s2_demo_proc spike_proc(&cfg);
+    demo_core demo_riscv_core(&cfg);
 
 
     // this is runtime from this point
     // first reset and load elf
-    spike_proc.reset();
+    demo_riscv_core.reset();
     if (!std::filesystem::exists("sw/main.elf")) {
         std::cerr << "Error: sw/main.elf not found. Please build the software first.\n";
         exit(1);
@@ -42,13 +42,11 @@ int main() {
     ext_sim.load_elf_file("sw/main.elf", &entry_point);
     assert(entry_point == START_PC);
     // enable debugging features
-    spike_proc.enable_debug();
-    spike_proc.configure_log(true, false);
+    demo_riscv_core.enable_debug();
+    demo_riscv_core.configure_log(true, false);
 
     while (1)
-        spike_proc.step(5000);
-
-    printf("\n\n *** the end ***\n");
+        demo_riscv_core.step(5000);
 
     return 0;
 }

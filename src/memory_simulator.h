@@ -40,14 +40,14 @@ class memory_simulator_wrapper : public memory_simulator, public abstract_sim_if
         bool store(reg_t addr, size_t len, const uint8_t* bytes) override;
 };
 
-// another way to create a bridge
-class spike_bridge_t : public abstract_sim_if_t {
+/// another way is to create a bridge
+class memory_sim_bridge : public abstract_sim_if_t {
 public:
     // class name of external simulator is known by the end used
-    spike_bridge_t(memory_simulator* sim, uint64_t start_pc = 0x20000000);
-    virtual ~spike_bridge_t() = default;
-    spike_bridge_t() = delete;
-    spike_bridge_t(const spike_bridge_t&) = delete;
+    memory_sim_bridge(memory_simulator* sim, uint64_t start_pc = 0x20000000);
+    virtual ~memory_sim_bridge() = default;
+    memory_sim_bridge() = delete;
+    memory_sim_bridge(const memory_sim_bridge&) = delete;
 
     // from abstract_sim_if_t
     bool load(reg_t addr, size_t len, uint8_t* bytes) override;

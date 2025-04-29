@@ -103,34 +103,24 @@ bool memory_simulator_wrapper::store(reg_t addr, size_t len, const uint8_t* byte
 
 ////////////// bridge
 
-spike_bridge_t::spike_bridge_t(memory_simulator* sim, uint64_t start_pc) : sim(sim) {
+memory_sim_bridge::memory_sim_bridge(memory_simulator* sim, uint64_t start_pc) : sim(sim) {
     sim->set_start_pc(start_pc);
-    printf("creating spike_bridge_t\n");
+    printf("creating memory_sim_bridge\n");
 }
 
-bool spike_bridge_t::load(reg_t addr, size_t len, uint8_t* bytes) {
-    printf("calling spike_bridge_t load\n");
+bool memory_sim_bridge::load(reg_t addr, size_t len, uint8_t* bytes) {
     assert(sim != nullptr);
     
-    if (addr + len > sim->size()) {
-        return false;
-    }
-
     sim->read(addr, bytes, len);
     return true;
 }
 
-bool spike_bridge_t::store(reg_t addr, size_t len, const uint8_t* bytes) {
-    printf("calling spike_bridge_t store\n");
+bool memory_sim_bridge::store(reg_t addr, size_t len, const uint8_t* bytes) {
     assert(sim != nullptr);
-    if (addr + len > sim->size()) {
-        return false;
-    }
-
     sim->write(addr, bytes, len);
     return true;
 }
 
-void spike_bridge_t::load_elf_file(const std::string& filename, uint64_t* entry_point) {
+void memory_sim_bridge::load_elf_file(const std::string& filename, uint64_t* entry_point) {
     sim->load_elf_file(filename, entry_point);
 }

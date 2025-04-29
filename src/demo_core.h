@@ -7,16 +7,16 @@
 #include "riscv/devices.h"    // for bus_t
 #include "riscv/log_file.h"   // for log_file_t
 
-class spike_bridge_t;
+class memory_sim_bridge;
 
-class s2_demo_proc : public simif_t {
+class demo_core : public simif_t {
     public:
 
     friend class processor_t;
     friend class mmu_t;
 
-    s2_demo_proc(const cfg_t* cfg);
-    ~s2_demo_proc();
+    demo_core(const cfg_t* cfg);
+    ~demo_core();
     
     // pure virtual functions from simif_t
     char* addr_to_mem(reg_t paddr) override;
