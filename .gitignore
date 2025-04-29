@@ -8,6 +8,7 @@ src/s2_demo_proc.o
 src/memory_simulator.o
 src/memory_simulator.d
 .vscode
+src/.vscode
 src/sw/main.elf
 src/sw/main.lst
 src/sw/main.o
