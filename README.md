@@ -181,52 +181,32 @@ The main program (`src/main.cc`) demonstrates how to set up and run the RISC-V s
    Creates a configuration object that defines:
    - ISA string with supported extensions
    - Privilege levels (MSU)
-   - Memory layout
    - Starting PC address (0x20000000)
-   - Other CPU parameters
+   - setting external simulator field
 
 2. **Memory Simulator Initialization**
    ```cpp
    memory_simulator_wrapper ext_sim(1024 * 1024 * 1024, START_PC);
    ```
-   Instantiates the external memory simulator with:
-   - 1GB memory size
-   - Configured start PC
-   - Built-in ROM contents for reset vector
-   - Support for ELF file loading
-
 In case you want to use `spike_bridge_t` instead of `memory_simulator_wrapper`, you need to define `#define USE_BRIDGE 1` before `main()`.
 
 3. **External Simulator Integration**
    ```cpp
    cfg.external_simulator = &ext_sim;
    ```
-   Links the memory simulator to the RISC-V configuration, enabling:
-   - Memory access through external simulator
-   - Load/store operations handling
-   - Instruction fetching
 
 4. **Processor Creation**
    ```cpp
    s2_demo_proc spike_proc(&cfg);
    ```
-   Creates a processor instance that:
-   - Inherits from RISC-V ISA simulator's `simif_t`
-   - Uses configuration parameters
-   - Sets up bus with fallback to external simulator
-   - Initializes processor state
 
 5. **Runtime Execution**
    ```cpp
    spike_proc.reset();
    while (1)
-       spike_proc.step(50);
+       spike_proc.step(5000);
    ```
-   Manages program execution:
-   - Resets processor to initial state
-   - Executes instructions in blocks of 50
-   - Continues until program termination
-   - Monitors finisher address (0x3fffb008) for completion
+
 
 The program terminates when the test software writes to the finisher address:
 - 0x5555: Successful completion ("PASS")

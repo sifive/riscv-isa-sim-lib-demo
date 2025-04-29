@@ -46,7 +46,7 @@ int main() {
     spike_proc.configure_log(true, false);
 
     while (1)
-        spike_proc.step(50);
+        spike_proc.step(5000);
 
     printf("\n\n *** the end ***\n");
 
