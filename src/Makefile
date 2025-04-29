@@ -4,7 +4,7 @@ default: check_prereqs spike_demo
 
 # Check for required environment variable
 ifndef SPIKE_SOURCE_DIR
-$(error SPIKE_SOURCE_DIR is not set. Please set it to point to your Spike repository and run ./src/spike_s2_demo.sh first)
+$(error SPIKE_SOURCE_DIR is not set. Please set it to point to your Spike repository and run ./src/setup.sh first)
 endif
 
 # Directory definitions
@@ -13,7 +13,7 @@ SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
 SPIKE_INSTALL_DIR = $(PWD)/spike_install
 SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
 
-# Copy files stamp (managed by spike_s2_demo.sh)
+# Copy files stamp (managed by setup.sh)
 COPY_FILES_STAMP = $(SPIKE_DIR)/.copy_files_stamp
 
 # Check prerequisites
@@ -21,7 +21,7 @@ COPY_FILES_STAMP = $(SPIKE_DIR)/.copy_files_stamp
 check_prereqs:
 	@if [ ! -f "$(COPY_FILES_STAMP)" ]; then \
 		echo "Error: Spike files are not patched yet"; \
-		echo "Please run './src/spike_s2_demo.sh' first to patch the files"; \
+		echo "Please run './src/setup.sh' first to patch the files"; \
 		echo "Make sure SPIKE_SOURCE_DIR is set correctly"; \
 		exit 1; \
 	fi
