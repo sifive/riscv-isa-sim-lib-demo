@@ -77,6 +77,16 @@ This will:
   - Load operations: address, data, and length
   - Fetch operations: address, instruction, and length
 
+### Step 5. compile sw
+
+Our small example software is in `src/sw` folder. Elf file is hardcoded in `main.cc`
+
+```bash
+cd src/sw
+# follow instructions in sw/README.md
+make
+```
+
 ## Adding External Simulator API
 
 ### riscv-isa-sim cfg_t class
@@ -121,9 +131,9 @@ public:
     virtual bool store(reg_t addr, size_t len, const uint8_t* bytes) = 0;
 };
 ```
-We use this class to integrate with riscv-isa-sim.
+We use this class as API to integrate with `riscv-isa-sim`.
 
-### Components
+### Components used in example
 
 ### Memory Simulator
 We have a base class and two implementation approaches:
@@ -166,8 +176,7 @@ class spike_bridge_t {
 };
 ```
 
-This approach uses composition, where the `spike_bridge_t` class holds a pointer to a `memory_simulator` instance and forwards memory operations to it. This can be more flexible, as it allows for easier swapping of memory simulation implementations.
-
+This approach uses composition, where the `spike_bridge_t` class holds a pointer to a `memory_simulator` instance and forwards memory operations to it.
 In both approaches we need to define `load` and `store` methods from `abstract_sim_if_t` interface.
 
 ### Main Program Flow
