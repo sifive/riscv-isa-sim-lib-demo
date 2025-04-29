@@ -195,6 +195,8 @@ The main program (`src/main.cc`) demonstrates how to set up and run the RISC-V s
    - Built-in ROM contents for reset vector
    - Support for ELF file loading
 
+In case you want to use `spike_bridge_t` instead of `memory_simulator_wrapper`, you need to define `#define USE_BRIDGE 1` before `main()`.
+
 3. **External Simulator Integration**
    ```cpp
    cfg.external_simulator = &ext_sim;
