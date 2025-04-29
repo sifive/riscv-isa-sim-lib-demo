@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # DO NOT TOUCH THIS
-EXPECTED_SHA="488e07d75df85d4bb363076dbb40b45288a2fad0"  # Update this with your expected SHA
+EXPECTED_SHA="77ea9deec2fbbe93fc181c5079081c66d7e1504a"  # Update this with your expected SHA
 
 # Check if SPIKE_SOURCE_DIR is defined
 if [ -z "${SPIKE_SOURCE_DIR}" ]; then

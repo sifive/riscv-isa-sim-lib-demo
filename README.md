@@ -10,7 +10,7 @@ First, clone the RISC-V ISA Simulator repository and checkout the required versi
 ```bash
 git clone https://github.com/riscv-software-src/riscv-isa-sim.git
 cd riscv-isa-sim
-git checkout 488e07d75df85d4bb363076dbb40b45288a2fad0
+git checkout 77ea9deec2fbbe93fc181c5079081c66d7e1504a
 cd ..
 ```
 
@@ -36,6 +36,7 @@ This script performs several critical tasks:
   2. `riscv/riscv.mk.in`
   3. `riscv/mmu.h`
 Those 3 files should be upsteamed to riscv-isa-sim Github soon.
+PRs are already made (PR1) [https://github.com/riscv-software-src/riscv-isa-sim/pull/1968] and (PR2) [https://github.com/riscv-software-src/riscv-isa-sim/pull/1969]
 
 The script creates a `.copy_files_stamp` file to track successful patching. If you need to repatch, remove this file and rerun the script.
 
