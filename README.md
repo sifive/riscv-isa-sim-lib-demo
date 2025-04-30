@@ -52,9 +52,8 @@ This script performs several critical tasks:
 - Copies required modified files to simulator repository:
   1. `softfloat/softfloat.mk.in`
   2. `riscv/riscv.mk.in`
-  3. `riscv/mmu.h`
-Those 3 files should be upsteamed to riscv-isa-sim Github soon.
-PRs are already made [PR 1968](https://github.com/riscv-software-src/riscv-isa-sim/pull/1968) and [PR 1969](https://github.com/riscv-software-src/riscv-isa-sim/pull/1969)
+Those 2 files should be upsteamed to riscv-isa-sim Github soon.
+PRs is already made [PR 1968](https://github.com/riscv-software-src/riscv-isa-sim/pull/1968)
 
 The script creates a `.copy_files_stamp` file to track successful patching. If you need to repatch, remove this file and rerun the script.
 

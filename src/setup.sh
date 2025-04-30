@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # DO NOT TOUCH THIS
-EXPECTED_SHA="77ea9deec2fbbe93fc181c5079081c66d7e1504a"  # Update this with your expected SHA
+EXPECTED_SHA="b0d7621ff8e9520aaacd57d97d4d99a545062d14"  # Update this with your expected SHA
 
 # Check if SPIKE_SOURCE_DIR is defined
 if [ -z "${SPIKE_SOURCE_DIR}" ]; then
@@ -51,7 +51,6 @@ cd - > /dev/null
 echo "This script will patch the following files in your Spike repository:"
 echo "1. softfloat/softfloat.mk.in"
 echo "2. riscv/riscv.mk.in"
-echo "3. riscv/mmu.h"
 echo "-----------------------------------"
 
 # Copy files from copy-files directory
