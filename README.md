@@ -27,9 +27,6 @@ Clone the RISC-V ISA Simulator repository and checkout the required version:
 
 ```bash
 git clone https://github.com/riscv-software-src/riscv-isa-sim.git
-cd riscv-isa-sim
-git checkout 77ea9deec2fbbe93fc181c5079081c66d7e1504a
-cd ..
 ```
 
 ### Step 2: Set Environment Variable
