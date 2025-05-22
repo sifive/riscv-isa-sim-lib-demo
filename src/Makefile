@@ -1,4 +1,4 @@
-default: check_prereqs demo
+default: demo
 
 .SECONDARY:
 
@@ -12,25 +12,6 @@ SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
 SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
 SPIKE_INSTALL_DIR = $(PWD)/spike_install
 SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
-
-# Copy files stamp (managed by setup.sh)
-COPY_FILES_STAMP = $(SPIKE_DIR)/.copy_files_stamp
-
-# Check prerequisites
-.PHONY: check_prereqs
-check_prereqs:
-	@if [ ! -f "$(COPY_FILES_STAMP)" ]; then \
-		echo "Error: Spike files are not patched yet"; \
-		echo "Please run './src/setup.sh' first to patch the files"; \
-		echo "Make sure SPIKE_SOURCE_DIR is set correctly"; \
-		exit 1; \
-	fi
-
-
-# Spike LIBS
-SPIKE_LIBS = $(SPIKE_INSTALL_DIR)/lib/libriscv.a \
-             $(SPIKE_INSTALL_DIR)/lib/libsoftfloat.a \
-             $(SPIKE_INSTALL_DIR)/lib/libdisasm.a
 
 # Source files
 CPPLIST = \
@@ -52,11 +33,11 @@ CXXFLAGS = \
     -I. \
     -I$(SPIKE_DIR)
 
-LDFLAGS = -std=c++17
+LDFLAGS = -std=c++17 -L$(SPIKE_INSTALL_DIR)/lib -Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib
 
 LDLIBS = \
     -latomic \
-    $(SPIKE_LIBS)
+    -L$(SPIKE_INSTALL_DIR)/lib -lriscv -lsoftfloat -ldisasm
 
 # Define base flags
 BASE_CFLAGS := -fPIC -O2
@@ -71,7 +52,7 @@ ifdef USE_HOOKS
     BASE_CXXFLAGS += $(HOOK_FLAGS)
 endif
 
-$(SPIKE_CONFIGURE_STAMP): check_prereqs
+$(SPIKE_CONFIGURE_STAMP):
 	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
 		mkdir -p $(SPIKE_BUILD_DIR); \
 		cd $(SPIKE_BUILD_DIR) && \
@@ -93,8 +74,6 @@ force_spike_build: $(SPIKE_CONFIGURE_STAMP)
 	$(MAKE) -C $(SPIKE_BUILD_DIR)
 	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
-$(SPIKE_LIBS): spike_build
-
 # Compilation rule
 %.o: %.cc
 	$(CXX) $(CXXFLAGS) $(USERDEFINES) -c -o $@ $< -MP -MMD
@@ -102,7 +81,7 @@ $(SPIKE_LIBS): spike_build
 # Link rules
 CORE_OBJS = $(OBJS)
 
-demo: $(CORE_OBJS) $(SPIKE_LIBS)
+demo: spike_build $(CORE_OBJS)
 	$(CXX) $(LDFLAGS) $(CORE_OBJS) -o $@ $(LDLIBS)
 
 -include $(DEPS)
