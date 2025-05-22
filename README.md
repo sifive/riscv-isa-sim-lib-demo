@@ -39,33 +39,32 @@ Set the environment variable to point to your RISC-V ISA Simulator repository:
 export SPIKE_SOURCE_DIR=/path/to/riscv-isa-sim
 ```
 
-### Step 3: Run Setup Script
-Run the setup script to patch simulator files:
-
-```bash
-./src/setup.sh
-```
-
-This script performs several critical tasks:
-- Verifies that `SPIKE_SOURCE_DIR` environment variable is set and valid
-- Validates repository SHA against expected version
-- Copies required modified files to simulator repository:
-  1. `softfloat/softfloat.mk.in`
-  2. `riscv/riscv.mk.in`
-Those 2 files should be upsteamed to riscv-isa-sim Github soon.
-PRs is already made [PR 1968](https://github.com/riscv-software-src/riscv-isa-sim/pull/1968)
-
-The script creates a `.copy_files_stamp` file to track successful patching. If you need to repatch, remove this file and rerun the script.
-
-### Step 4: Build the Demo
-After the setup script completes successfully, build the project:
+### Step 3: Build the Demo
+Build the project:
 
 ```bash
 make
 ```
-Note: We are forcing C++17 standard in the Makefile
 
-The build process produces an executable named `demo` in the `src` directory.
+The build process:
+1. Configures and builds the RISC-V ISA Simulator (Spike) as a library
+2. Installs the library to `./spike_install` directory
+3. Compiles the demo code and links it dynamically with the Spike library
+4. Produces an executable named `demo` in the `src` directory
+
+Note: We are forcing C++17 standard in the Makefile.
+
+### Dynamic Linking
+This demo uses dynamic linking to connect with the Spike library:
+
+- The Spike libraries are built and installed to `./spike_install/lib`
+- The demo executable is linked with `-Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib` to ensure it can find the libraries at runtime
+- This approach allows the demo to use Spike's functionality without embedding the entire codebase
+
+The key libraries linked are:
+- `libriscv.so`: Core RISC-V simulation functionality
+- `libsoftfloat.so`: Software floating-point implementation
+- `libdisasm.so`: Disassembly functionality
 
 ### Optional: Building with Memory Operation Hooks
 To enable memory operation observation/debugging, you can build with observability hooks enabled:
@@ -80,7 +79,7 @@ This will:
   - Load operations: address, data, and length
   - Fetch operations: address, instruction, and length
 
-### (Optional) Step 5: compile sw
+### (Optional) Step 4: compile sw
 
 Our small example software is in `src/sw` folder. Elf filename is hardcoded in `main.cc`
 
@@ -92,7 +91,7 @@ make
 
 This step is optional because we have added a precompiled elf file in `src/sw/main.elf`
 
-### Step 6: Run the Demo
+### Step 5: Run the Demo
 Run the compiled demo:
 ```bash
 ./src/demo
