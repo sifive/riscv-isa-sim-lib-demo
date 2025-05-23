@@ -37,63 +37,28 @@ export SPIKE_SOURCE_DIR=/path/to/riscv-isa-sim
 ```
 
 ### Step 3: Build the Demo
-Build the project:
-
-```bash
-make
-```
-
-The build process:
-1. Configures and builds the RISC-V ISA Simulator (Spike) as a library
-2. Installs the library to `./spike_install` directory
-3. Compiles the demo code and links it dynamically with the Spike library
-4. Produces an executable named `demo` in the `src` directory
-
-Note: We are forcing C++17 standard in the Makefile.
-
-### Build Targets Explained
-
-The Makefile includes several targets:
-
-#### compile_only
+There are several build targets in the Makefile. 
+First you need to compile the source files. You can do it with `compile_only` target:
 ```bash
 make compile_only
 ```
-This target compiles the source files without linking them.
-Note: It is necessary to have a variable `SPIKE_SOURCE_DIR` set to point to your `riscv-isa-sim` repository.
-If not, you need to have it in `usr/local/include`.
-
-#### link_demo_dynamic
+Then you can link the object files with the Spike libraries dynamically. You can do it with `link_demo_dynamic` target:
 ```bash
 make link_demo_dynamic
 ```
-This target links the previously compiled object files with the Spike libraries dynamically. It:
-- Uses the `LD_LIBRARY_PATH` environment variable to locate the libraries
-- Adds runtime path information to the executable
-- Links against specific Spike shared libraries
-
-#### LD_LIBRARY_PATH Usage
-The `LD_LIBRARY_PATH` environment variable is used during linking to specify where to find the shared libraries. When using the `link_demo_dynamic` target directly, you may need to set this variable:
-
+Those two steps can be combined into one with `demo` target:
 ```bash
-export LD_LIBRARY_PATH=/path/to/spike_install/lib
-make link_demo_dynamic
+make demo
 ```
 
-### Full compilation from scratch
 If you want to compile `riscv-isa-sim` from scratch, you can use the `build_spike` target:
 ```bash
 make build_spike
 ```
-This target:
-- will install shared libraries to `./spike_install/lib`
-- The demo executable is linked with `-Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib` to ensure it can find the libraries at runtime
-- This approach allows the demo to use Spike's functionality without embedding the entire codebase
 
-The key libraries linked are:
-- `libriscv.so`: Core RISC-V simulation functionality
-- `libsoftfloat.so`: Software floating-point implementation
-- `libdisasm.so`: Disassembly functionality
+Note: We are forcing C++17 standard in the Makefile and therefore some Warnings are expected.
+
+Output of the build process is `demo` executable in `src` folder.
 
 ### Optional: Building with Memory Operation Hooks
 To enable memory operation observation/debugging, you can build with observability hooks enabled:
