@@ -77,16 +77,39 @@ force_spike_build: $(SPIKE_CONFIGURE_STAMP)
 	$(MAKE) -C $(SPIKE_BUILD_DIR)
 	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
-# Compilation rule
+# Compilation rule - make sure it's ONLY compiling
 %.o: %.cc
-	$(CXX) $(CXXFLAGS) $(USERDEFINES) -c -o $@ $< -MP -MMD
+	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
 
-# Link rules
-CORE_OBJS = $(OBJS)
+# Compile individual files without linking
+main.o: main.cc
+	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
 
-demo: spike_build $(CORE_OBJS)
-	$(CXX) $(LDFLAGS) $(CORE_OBJS) -o $@ $(LDLIBS)
+demo_core.o: demo_core.cc
+	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
 
+memory_simulator.o: memory_simulator.cc
+	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
+
+# Basic compilation flags (no Spike dependencies)
+BASIC_CXXFLAGS = -std=c++17 -fPIC -Os -I.
+
+compile_only:
+	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) main.cc
+	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) demo_core.cc
+	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) memory_simulator.cc
+
+# Link with LD_LIBRARY_PATH
+link_demo_dynamic: $(OBJS)
+	$(CXX) -std=c++17 $(OBJS) -o demo \
+		-Wl,-rpath,$(LD_LIBRARY_PATH) \
+		-Wl,--no-as-needed \
+		$(LD_LIBRARY_PATH)/libriscv.so \
+		$(LD_LIBRARY_PATH)/libsoftfloat.so \
+		-latomic
+
+# Full build process with dynamic linking
+demo_dynamic: compile_only link_demo_dynamic
 -include $(DEPS)
 
 # Cleaning targets
