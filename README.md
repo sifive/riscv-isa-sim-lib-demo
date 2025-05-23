@@ -51,10 +51,42 @@ The build process:
 
 Note: We are forcing C++17 standard in the Makefile.
 
-### Dynamic Linking
-This demo uses dynamic linking to connect with the Spike library:
+### Build Targets Explained
 
-- The Spike libraries are built and installed to `./spike_install/lib`
+The Makefile includes several targets:
+
+#### compile_only
+```bash
+make compile_only
+```
+This target compiles the source files without linking them.
+Note: It is necessary to have a variable `SPIKE_SOURCE_DIR` set to point to your `riscv-isa-sim` repository.
+If not, you need to have it in `usr/local/include`.
+
+#### link_demo_dynamic
+```bash
+make link_demo_dynamic
+```
+This target links the previously compiled object files with the Spike libraries dynamically. It:
+- Uses the `LD_LIBRARY_PATH` environment variable to locate the libraries
+- Adds runtime path information to the executable
+- Links against specific Spike shared libraries
+
+#### LD_LIBRARY_PATH Usage
+The `LD_LIBRARY_PATH` environment variable is used during linking to specify where to find the shared libraries. When using the `link_demo_dynamic` target directly, you may need to set this variable:
+
+```bash
+export LD_LIBRARY_PATH=/path/to/spike_install/lib
+make link_demo_dynamic
+```
+
+### Full compilation from scratch
+If you want to compile `riscv-isa-sim` from scratch, you can use the `build_spike` target:
+```bash
+make build_spike
+```
+This target:
+- will install shared libraries to `./spike_install/lib`
 - The demo executable is linked with `-Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib` to ensure it can find the libraries at runtime
 - This approach allows the demo to use Spike's functionality without embedding the entire codebase
 
