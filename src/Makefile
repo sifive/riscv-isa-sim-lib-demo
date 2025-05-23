@@ -3,15 +3,12 @@ default: demo
 .SECONDARY:
 
 # Check for required environment variable
-ifndef SPIKE_SOURCE_DIR
-$(error SPIKE_SOURCE_DIR is not set. Please set it to point to your Spike repository and run ./src/setup.sh first)
-endif
-
-# Directory definitions
-SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
-SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
-SPIKE_INSTALL_DIR = $(PWD)/spike_install
-SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
+.PHONY: check_spike_dir
+check_spike_dir:
+	@if [ -z "$(SPIKE_SOURCE_DIR)" ]; then \
+		echo "ERROR: SPIKE_SOURCE_DIR is not set. Please set it to point to your Spike repository and run ./src/setup.sh first"; \
+		exit 1; \
+	 fi
 
 # Source files
 CPPLIST = \
@@ -51,6 +48,12 @@ ifdef USE_HOOKS
     BASE_CFLAGS += $(HOOK_FLAGS)
     BASE_CXXFLAGS += $(HOOK_FLAGS)
 endif
+
+# Directory definitions
+SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
+SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
+SPIKE_INSTALL_DIR = $(PWD)/spike_install
+SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
 
 $(SPIKE_CONFIGURE_STAMP):
 	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
