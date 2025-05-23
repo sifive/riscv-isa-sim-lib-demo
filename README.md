@@ -51,6 +51,27 @@ Those two steps can be combined into one with `demo` target:
 make demo
 ```
 
+### Library Linking Details
+
+The project uses dynamic linking to connect with the Spike libraries:
+
+```makefile
+link_demo_dynamic: $(OBJS)
+    $(CXX) -std=c++17 $(OBJS) -o demo \
+        -L../lib \
+        -Wl,-rpath,../lib/ \
+        -Wl,--no-as-needed \
+        -lriscv \
+        -lsoftfloat \
+        -latomic
+```
+
+Key components:
+- `-L../lib`: Specifies the library search path
+- `-Wl,-rpath,../lib/`: Embeds the runtime library path in the executable so it can find libraries at runtime
+- `-Wl,--no-as-needed`: Ensures all specified libraries are linked, even if they don't resolve any symbols
+- `-lriscv`, `-lsoftfloat`, `-latomic`: Required libraries for the RISC-V simulator
+
 If you want to compile `riscv-isa-sim` from scratch, you can use the `build_spike` target:
 ```bash
 make build_spike
