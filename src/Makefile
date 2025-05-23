@@ -109,7 +109,7 @@ link_demo_dynamic: $(OBJS)
 		-latomic
 
 # Full build process with dynamic linking
-demo_dynamic: compile_only link_demo_dynamic
+demo: compile_only link_demo_dynamic
 -include $(DEPS)
 
 # Cleaning targets
