@@ -102,10 +102,11 @@ compile_only:
 # Link with LD_LIBRARY_PATH
 link_demo_dynamic: $(OBJS)
 	$(CXX) -std=c++17 $(OBJS) -o demo \
-		-Wl,-rpath,$(LD_LIBRARY_PATH) \
+		-L../lib \
+		-Wl,-rpath,../lib/ \
 		-Wl,--no-as-needed \
-		$(LD_LIBRARY_PATH)/libriscv.so \
-		$(LD_LIBRARY_PATH)/libsoftfloat.so \
+		-lriscv \
+		-lsoftfloat \
 		-latomic
 
 # Full build process with dynamic linking
