@@ -15,14 +15,17 @@
 #ifndef DEMO_CORE_H
 #define DEMO_CORE_H
 
-#include "riscv/processor.h"
 #include "riscv/simif.h"      // needed for base class
-#include "riscv/cfg.h"        // needed for cfg_t* in header
-#include "riscv/processor.h"  // needed for processor_t* in header
-#include "riscv/isa_parser.h" // needed for isa_parser_t member
-#include "riscv/devices.h"    // for bus_t
 #include "riscv/log_file.h"   // for log_file_t
 
+#include <map>
+#include <memory>
+#include <vector>
+
+// Forward declarations
+class processor_t;
+class cfg_t;
+class bus_t;
 class memory_sim_bridge;
 
 class demo_core : public simif_t {

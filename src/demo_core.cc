@@ -14,6 +14,9 @@
 
 #include "demo_core.h"
 #include "riscv/mmu.h"
+#include "riscv/processor.h"
+#include "riscv/devices.h"
+
 
 char* demo_core::addr_to_mem(reg_t paddr) {
   auto desc = bus->find_device(paddr >> PGSHIFT << PGSHIFT, PGSIZE);
