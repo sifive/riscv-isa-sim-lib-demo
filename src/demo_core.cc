@@ -65,7 +65,7 @@ demo_core::demo_core(const cfg_t* cfg):
     abstract_device_t* bus_fallback = nullptr;
 
     if (cfg->external_simulator.has_value()) {
-        auto* ext_sim = cfg->external_simulator.value();
+        abstract_sim_if_t* ext_sim = cfg->external_simulator.value();
         bus_fallback = new external_sim_device_t(ext_sim);
     }
 
