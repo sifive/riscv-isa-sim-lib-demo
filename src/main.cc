@@ -16,6 +16,7 @@
 #include "memory_simulator.h"
 #include "riscv/cfg.h"
 #include <filesystem>
+#include <iostream>
 
 #define START_PC 0x20000000
 
