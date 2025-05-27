@@ -39,8 +39,6 @@ CXXFLAGS = \
     -I. \
     $(SPIKE_INCLUDES)
 
-#LDFLAGS = -std=c++17 -L$(SPIKE_LIBDIR) -Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib
-
 LDLIBS = -latomic -lriscv -lsoftfloat -ldisasm
 
 # Define base flags
