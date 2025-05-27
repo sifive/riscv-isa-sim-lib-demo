@@ -2,6 +2,15 @@ default: demo
 
 .SECONDARY:
 
+# Directory definitions
+# SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
+# SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
+# SPIKE_INSTALL_DIR = $(PWD)/spike_install
+# SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
+
+SPIKE_INLCUDE_DIR=
+SPIKE_LIBDIR=
+
 # Check for required environment variable
 .PHONY: check_spike_dir
 check_spike_dir:
@@ -28,13 +37,11 @@ CXXFLAGS = \
     -Os \
     -DVL_THREADED \
     -I. \
-    -I$(SPIKE_DIR)
+    $(SPIKE_INCLUDES)
 
-LDFLAGS = -std=c++17 -L$(SPIKE_INSTALL_DIR)/lib -Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib
+#LDFLAGS = -std=c++17 -L$(SPIKE_LIBDIR) -Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib
 
-LDLIBS = \
-    -latomic \
-    -L$(SPIKE_INSTALL_DIR)/lib -lriscv -lsoftfloat -ldisasm
+LDLIBS = -latomic -lriscv -lsoftfloat -ldisasm
 
 # Define base flags
 BASE_CFLAGS := -fPIC -O2
@@ -49,81 +56,78 @@ ifdef USE_HOOKS
     BASE_CXXFLAGS += $(HOOK_FLAGS)
 endif
 
-# Directory definitions
-SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
-SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
-SPIKE_INSTALL_DIR = $(PWD)/spike_install
-SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
 
-$(SPIKE_CONFIGURE_STAMP):
-	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
-		mkdir -p $(SPIKE_BUILD_DIR); \
-		cd $(SPIKE_BUILD_DIR) && \
-		CXXFLAGS="$(BASE_CXXFLAGS)" $(SPIKE_DIR)/configure \
-			--prefix=$(SPIKE_INSTALL_DIR) \
-			CFLAGS="$(BASE_CFLAGS)" \
-			CXXFLAGS="$(BASE_CXXFLAGS)"; \
-	fi
-	touch $(SPIKE_CONFIGURE_STAMP)
+# $(SPIKE_CONFIGURE_STAMP):
+# 	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
+# 		mkdir -p $(SPIKE_BUILD_DIR); \
+# 		cd $(SPIKE_BUILD_DIR) && \
+# 		CXXFLAGS="$(BASE_CXXFLAGS)" $(SPIKE_DIR)/configure \
+# 			--prefix=$(SPIKE_INSTALL_DIR) \
+# 			CFLAGS="$(BASE_CFLAGS)" \
+# 			CXXFLAGS="$(BASE_CXXFLAGS)"; \
+# 	fi
+# 	touch $(SPIKE_CONFIGURE_STAMP)
 
 # Regular (non-PHONY) target
-spike_build: $(SPIKE_CONFIGURE_STAMP)
-	$(MAKE) -C $(SPIKE_BUILD_DIR)
-	$(MAKE) -C $(SPIKE_BUILD_DIR) install
+# spike_build: $(SPIKE_CONFIGURE_STAMP)
+# 	$(MAKE) -C $(SPIKE_BUILD_DIR)
+# 	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
 # Rule to build Spike
-.PHONY: force_spike_build
-force_spike_build: $(SPIKE_CONFIGURE_STAMP)
-	$(MAKE) -C $(SPIKE_BUILD_DIR)
-	$(MAKE) -C $(SPIKE_BUILD_DIR) install
+# .PHONY: force_spike_build
+# force_spike_build: $(SPIKE_CONFIGURE_STAMP)
+# 	$(MAKE) -C $(SPIKE_BUILD_DIR)
+# 	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
 # Compilation rule - make sure it's ONLY compiling
 %.o: %.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
+	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ -c $<
 
 # Compile individual files without linking
-main.o: main.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
+# main.o: main.cc
+# 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
 
-demo_core.o: demo_core.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
+# demo_core.o: demo_core.cc
+# 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
 
-memory_simulator.o: memory_simulator.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
+# memory_simulator.o: memory_simulator.cc
+# 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
 
 # Basic compilation flags (no Spike dependencies)
-BASIC_CXXFLAGS = -std=c++17 -fPIC -Os -I.
+# BASIC_CXXFLAGS = -std=c++17 -fPIC -Os -I.
 
-compile_only:
-	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) main.cc
-	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) demo_core.cc
-	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) memory_simulator.cc
+.PHONY: compile_only
+compile_only: $(OBJS)
+
+#	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) main.cc
+#	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) demo_core.cc
+#	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) memory_simulator.cc
 
 # Link with LD_LIBRARY_PATH
-link_demo_dynamic: $(OBJS)
-	$(CXX) -std=c++17 $(OBJS) -o demo \
-		-L../lib \
-		-Wl,-rpath,../lib/ \
+demo: $(OBJS)
+	$(CXX) -std=c++17 $^ -o demo \
+		$(SPIKE_LIBDIR) \
+		-Wl,-rpath,. \
+		-Wl,-rpath,./lib \
 		-Wl,--no-as-needed \
+		-lstdc++fs \
 		-lriscv \
 		-lsoftfloat \
 		-latomic
 
-# Full build process with dynamic linking
-demo: compile_only link_demo_dynamic
 -include $(DEPS)
 
 # Cleaning targets
-.PHONY: clean clean_spike reconfigure_spike rebuild_spike build_spike
-clean_spike:
-	rm -rf $(SPIKE_BUILD_DIR) $(SPIKE_INSTALL_DIR)
-	rm -f $(SPIKE_CONFIGURE_STAMP)
+# .PHONY: clean clean_spike reconfigure_spike rebuild_spike build_spike
+# clean_spike:
+# 	rm -rf $(SPIKE_BUILD_DIR) $(SPIKE_INSTALL_DIR)
+# 	rm -f $(SPIKE_CONFIGURE_STAMP)
 
-clean: clean_spike
+clean: 
 	rm -f $(OBJS) $(DEPS) demo
 
-reconfigure_spike: clean_spike $(SPIKE_CONFIGURE_STAMP)
+# reconfigure_spike: clean_spike $(SPIKE_CONFIGURE_STAMP)
 
-build_spike: $(SPIKE_LIBS)
+# build_spike: $(SPIKE_LIBS)
 
-rebuild_spike: clean_spike $(SPIKE_LIBS)
+# rebuild_spike: clean_spike $(SPIKE_LIBS)
