@@ -83,25 +83,8 @@ endif
 %.o: %.cc
 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ -c $<
 
-# Compile individual files without linking
-# main.o: main.cc
-# 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-# demo_core.o: demo_core.cc
-# 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-# memory_simulator.o: memory_simulator.cc
-# 	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-# Basic compilation flags (no Spike dependencies)
-# BASIC_CXXFLAGS = -std=c++17 -fPIC -Os -I.
-
 .PHONY: compile_only
 compile_only: $(OBJS)
-
-#	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) main.cc
-#	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) demo_core.cc
-#	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) memory_simulator.cc
 
 # Link with LD_LIBRARY_PATH
 demo: $(OBJS)
