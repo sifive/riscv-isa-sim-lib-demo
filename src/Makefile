@@ -88,8 +88,8 @@ compile_only: $(OBJS)
 demo: $(OBJS)
 	$(CXX) -std=c++17 $^ -o demo \
 		$(SPIKE_LIBDIR) \
-		-Wl,-rpath,. \
-		-Wl,-rpath,./lib \
+		-Wl,-rpath,\$$ORIGIN \
+		-Wl,-rpath,\$$ORIGIN/lib \
 		-Wl,--no-as-needed \
 		-lstdc++fs \
 		-lriscv \
