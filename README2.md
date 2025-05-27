@@ -33,7 +33,7 @@ cp $SPIKE_LIBDIR/*.so .
 ./demo
 ```
 
-or symlink the libraries to the same directory as the executable:
+or symlink the library directory to the lib directory beside the executable:
 ```
 ln -s $SPIKE_LIBDIR/ ./lib
 ./demo
