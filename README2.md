@@ -13,7 +13,7 @@ run `make`
 
 For example,
 ```
-make CFLAGS==-I../riscv-isa-sim/ LDFLAGS=-L../riscv-isa-sim/build
+make CFLAGS=-I../riscv-isa-sim/ LDFLAGS=-L../riscv-isa-sim/build
 ```
 
 # To Run:
