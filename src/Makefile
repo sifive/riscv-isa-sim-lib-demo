@@ -1,6 +1,66 @@
-default: demo
+# Useful targets:
+# compile_only - compiles the source files into object files.
+# clean - removes all generated files.
+#
+# Useful variables:
+# CXX - C++ compiler to use.
+# CFLAGS - additional flags for the C compiler.
+# LDFLAGS - additional flags for the linker.
 
+# This is the default target.
+demo:
+
+# Prevent deletion of intermediate files.
 .SECONDARY:
+
+# Get the directory of this makefile.
+ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+VPATH := $(ROOT_DIR)
+
+# Source files
+CPPLIST := \
+    demo_core.cc \
+    main.cc \
+    memory_simulator.cc
+
+# Object and dependency files
+OBJS := $(CPPLIST:.cc=.o)
+DEPS := $(CPPLIST:.cc=.d)
+
+# Compiler flags
+CFLAGS := -Os -fPIC
+DEMO_CXXFLAGS := \
+    -MMD \
+    -std=c++17 \
+    -I$(ROOT_DIR) \
+    $(CFLAGS)
+
+DEMO_LDFLAGS := -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/lib -Wl,--no-as-needed $(LDFLAGS)
+
+DEMO_LDLIBS := -latomic -lriscv -lsoftfloat -ldisasm -lstdc++fs $(LDLIBS) 
+
+-include $(DEPS)
+
+%.o: %.cc
+	$(CXX) -c $(DEMO_CXXFLAGS) -o $@ -c $<
+
+demo: $(OBJS)
+	$(CXX) $(DEMO_LDFLAGS) $^ -o $@ $(DEMO_LDLIBS)
+
+# Compilation rule - make sure it's ONLY compiling
+.PHONY: compile_only
+compile_only: $(OBJS)
+
+.PHONY: clean
+clean:
+	$(RM) $(OBJS) $(DEPS) demo
+
+
+# Spike
+
+# TODO if we want a default value here, then there is no point in checking for it with
+# the check_spike_dir target.
+#SPIKE_SOURCE_DIR ?= $(ROOT_DIR)/../riscv-isa-sim
 
 # Check for required environment variable
 .PHONY: check_spike_dir
@@ -10,120 +70,47 @@ check_spike_dir:
 		exit 1; \
 	 fi
 
-# Source files
-CPPLIST = \
-    demo_core.cc \
-    main.cc \
-    memory_simulator.cc
-
-# Object and dependency files
-OBJS = $(CPPLIST:.cc=.o)
-DEPS = $(CPPLIST:.cc=.d)
-
-# Compiler flags
-CXXFLAGS = \
-    -MMD \
-    -std=c++17 \
-    -fPIC \
-    -Os \
-    -DVL_THREADED \
-    -I. \
-    -I$(SPIKE_DIR)
-
-LDFLAGS = -std=c++17 -L$(SPIKE_INSTALL_DIR)/lib -Wl,-rpath,$(SPIKE_INSTALL_DIR)/lib
-
-LDLIBS = \
-    -latomic \
-    -L$(SPIKE_INSTALL_DIR)/lib -lriscv -lsoftfloat -ldisasm
-
-# Define base flags
-BASE_CFLAGS := -fPIC -O2
-BASE_CXXFLAGS := -fPIC -O2 -std=c++17
-
-# Capture original PWD at the start
-ORIG_PWD := $(shell pwd)
-# Add hooks.h if USE_HOOKS is defined
-ifdef USE_HOOKS
-    HOOK_FLAGS := -include $(ORIG_PWD)/hooks.h
-    BASE_CFLAGS += $(HOOK_FLAGS)
-    BASE_CXXFLAGS += $(HOOK_FLAGS)
-endif
-
 # Directory definitions
 SPIKE_DIR = $(patsubst %/,%,$(SPIKE_SOURCE_DIR))
 SPIKE_BUILD_DIR = $(SPIKE_DIR)/build
-SPIKE_INSTALL_DIR = $(PWD)/spike_install
+SPIKE_INSTALL_DIR = $(ROOT_DIR)/spike_install
 SPIKE_CONFIGURE_STAMP = $(SPIKE_BUILD_DIR)/.configure_stamp
+
+# Define base flags
+SPIKE_CLFAGS := -fPIC -O2
+SPIKE_CXXFLAGS := -fPIC -O2 -std=c++17
+
+# Add hooks.h if USE_HOOKS is defined
+ifdef USE_HOOKS
+    HOOK_FLAGS := -I$(ROOT_DIR)/hooks.h
+    SPIKE_CFLAGS += $(HOOK_FLAGS)
+    SPIKE_CXXFLAGS += $(HOOK_FLAGS)
+endif
 
 $(SPIKE_CONFIGURE_STAMP):
 	@if [ ! -f "$(SPIKE_BUILD_DIR)/config.status" ]; then \
-		mkdir -p $(SPIKE_BUILD_DIR); \
+		mkdir -p $(SPIKE_BUILD_DIR) && \
 		cd $(SPIKE_BUILD_DIR) && \
-		CXXFLAGS="$(BASE_CXXFLAGS)" $(SPIKE_DIR)/configure \
+		$(SPIKE_DIR)/configure \
 			--prefix=$(SPIKE_INSTALL_DIR) \
-			CFLAGS="$(BASE_CFLAGS)" \
-			CXXFLAGS="$(BASE_CXXFLAGS)"; \
+			CFLAGS="$(SPIKE_CFLAGS)" \
+			CXXFLAGS="$(SPIKE_CXXFLAGS)"; \
 	fi
 	touch $(SPIKE_CONFIGURE_STAMP)
 
 # Regular (non-PHONY) target
-spike_build: $(SPIKE_CONFIGURE_STAMP)
+.PHONY: spike_build
+spike_build: $(SPIKE_CONFIGURE_STAMP) | check_spike_dir
 	$(MAKE) -C $(SPIKE_BUILD_DIR)
 	$(MAKE) -C $(SPIKE_BUILD_DIR) install
 
-# Rule to build Spike
-.PHONY: force_spike_build
-force_spike_build: $(SPIKE_CONFIGURE_STAMP)
-	$(MAKE) -C $(SPIKE_BUILD_DIR)
-	$(MAKE) -C $(SPIKE_BUILD_DIR) install
-
-# Compilation rule - make sure it's ONLY compiling
-%.o: %.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-# Compile individual files without linking
-main.o: main.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-demo_core.o: demo_core.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-memory_simulator.o: memory_simulator.cc
-	$(CXX) -c $(CXXFLAGS) $(USERDEFINES) -o $@ $<
-
-# Basic compilation flags (no Spike dependencies)
-BASIC_CXXFLAGS = -std=c++17 -fPIC -Os -I.
-
-compile_only:
-	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) main.cc
-	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) demo_core.cc
-	$(CXX) -c $(BASIC_CXXFLAGS) -I$(SPIKE_DIR) memory_simulator.cc
-
-# Link with LD_LIBRARY_PATH
-link_demo_dynamic: $(OBJS)
-	$(CXX) -std=c++17 $(OBJS) -o demo \
-		-L../lib \
-		-Wl,-rpath,../lib/ \
-		-Wl,--no-as-needed \
-		-lriscv \
-		-lsoftfloat \
-		-latomic
-
-# Full build process with dynamic linking
-demo: compile_only link_demo_dynamic
--include $(DEPS)
+.PHONY: reconfigure_spike
+reconfigure_spike: | check_spike_dir
+	$(MAKE) clean_spike
+	$(MAKE) $(SPIKE_CONFIGURE_STAMP)
 
 # Cleaning targets
-.PHONY: clean clean_spike reconfigure_spike rebuild_spike build_spike
-clean_spike:
-	rm -rf $(SPIKE_BUILD_DIR) $(SPIKE_INSTALL_DIR)
-	rm -f $(SPIKE_CONFIGURE_STAMP)
-
-clean: clean_spike
-	rm -f $(OBJS) $(DEPS) demo
-
-reconfigure_spike: clean_spike $(SPIKE_CONFIGURE_STAMP)
-
-build_spike: $(SPIKE_LIBS)
-
-rebuild_spike: clean_spike $(SPIKE_LIBS)
+.PHONY: clean_spike
+clean_spike: | check_spike_dir
+	$(RM) -r $(SPIKE_BUILD_DIR) $(SPIKE_INSTALL_DIR)
+	$(RM) $(SPIKE_CONFIGURE_STAMP)
