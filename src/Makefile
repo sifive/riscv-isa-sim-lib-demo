@@ -33,7 +33,9 @@ DEMO_CXXFLAGS := \
     -MMD \
     -std=c++17 \
     -I$(ROOT_DIR) \
-    $(CFLAGS)
+    $(CFLAGS) \
+	-I$(SPIKE_SOURCE_DIR) # check why is this now needed
+
 
 DEMO_LDFLAGS := -Wl,-rpath,\$$ORIGIN -Wl,-rpath,\$$ORIGIN/lib -Wl,--no-as-needed $(LDFLAGS)
 
