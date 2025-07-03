@@ -16,7 +16,6 @@
 #include "memory_simulator.h"
 #include "riscv/cfg.h"
 #include "riscv/remote_bitbang.h"
-#include "riscv/jtag_dtm.h"
 #include <filesystem>
 #include <iostream>
 
