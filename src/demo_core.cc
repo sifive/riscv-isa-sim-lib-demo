@@ -16,6 +16,8 @@
 #include "riscv/mmu.h"
 #include "riscv/processor.h"
 #include "riscv/devices.h"
+#include "riscv/remote_bitbang.h"
+#include "riscv/debug_module.h" 
 
 
 char* demo_core::addr_to_mem(reg_t paddr) {
@@ -57,10 +59,12 @@ void demo_core::set_rom()
   std::shared_ptr<rom_device_t> boot_rom(new rom_device_t(rom));
   
   bus->add_device(DEFAULT_RSTVEC, boot_rom.get());
+
 }
 
-demo_core::demo_core(const cfg_t* cfg):
-    cfg(cfg)
+demo_core::demo_core(const cfg_t* cfg, const debug_module_config_t& dm_config):
+    cfg(cfg),
+    debug_module(this, dm_config)
 {
     abstract_device_t* bus_fallback = nullptr;
 
@@ -87,6 +91,9 @@ demo_core::demo_core(const cfg_t* cfg):
             std::cout);
         procs.push_back(harts[id]);
     }
+
+    bus->add_device(0x0, &debug_module);
+
 }
 
 demo_core::~demo_core() {
@@ -146,6 +153,8 @@ void demo_core::step(size_t n) {
     for(auto& proc : procs) {
         proc->step(n);
     }
+    if (remote_bitbang)
+            this->remote_bitbang->tick();
 }
 
 void demo_core::enable_debug(bool enable) {

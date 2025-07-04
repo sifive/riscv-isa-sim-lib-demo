@@ -17,6 +17,7 @@
 
 #include "riscv/simif.h"      // needed for base class
 #include "riscv/log_file.h"   // for log_file_t
+#include "riscv/debug_module.h"
 
 #include <map>
 #include <memory>
@@ -27,6 +28,9 @@ class processor_t;
 class cfg_t;
 class bus_t;
 class memory_sim_bridge;
+class remote_bitbang_t;
+class debug_module_config_t;
+
 
 class demo_core : public simif_t {
     public:
@@ -34,7 +38,7 @@ class demo_core : public simif_t {
     friend class processor_t;
     friend class mmu_t;
 
-    demo_core(const cfg_t* cfg);
+    demo_core(const cfg_t* cfg, const debug_module_config_t& dm_config);
     ~demo_core();
     
     // pure virtual functions from simif_t
@@ -66,6 +70,13 @@ class demo_core : public simif_t {
         bool debug{false};
         bool log{false};
         log_file_t log_file{"out.txt"}; // Default log file
+        // for GDB
+        remote_bitbang_t* remote_bitbang{nullptr};
+    public:
+    debug_module_t debug_module;
+    void set_remote_bitbang(remote_bitbang_t* remote_bitbang) {
+        this->remote_bitbang = remote_bitbang;
+    }
 };
 
 #endif

@@ -15,12 +15,15 @@
 #include "demo_core.h"
 #include "memory_simulator.h"
 #include "riscv/cfg.h"
+#include "riscv/remote_bitbang.h"
 #include <filesystem>
 #include <iostream>
 
 #define START_PC 0x20000000
+// #define START_PC 0x10110000
 
-int main() {
+
+int main(int argc, char* argv[]) {
     // configuration time
     cfg_t cfg;
     
@@ -33,6 +36,27 @@ int main() {
     cfg.pmpregions = 16;
     cfg.hartids = {0};
 
+    debug_module_config_t dm_config; // all default params
+
+    uint16_t rbb_port = 0;
+    bool use_rbb = false;
+    unsigned dmi_rti = 0; // TODO: check if this should be parsed from command line
+
+
+    for (int i = 1; i < argc; i++) {
+        std::string arg = argv[i];
+
+        if (arg.find("--rbb-port") != std::string::npos) {
+            size_t pos = arg.find("=");
+            if (pos != std::string::npos) {
+                rbb_port = std::stoi(arg.substr(pos + 1));
+            } 
+            std::cout << "RBB port set to " << rbb_port << std::endl;
+            use_rbb = true;
+        }
+    }
+
+
     // creating external simulator
     #ifdef USE_BRIDGE
     memory_simulator mem_sim(1024 * 1024 * 1024, START_PC);
@@ -43,7 +67,14 @@ int main() {
     // setting cfg field from external simulator
     cfg.external_simulator = &ext_sim;
 
-    demo_core demo_riscv_core(&cfg);
+    demo_core demo_riscv_core(&cfg, dm_config);
+    std::unique_ptr<remote_bitbang_t> remote_bitbang((remote_bitbang_t *) NULL);
+    std::unique_ptr<jtag_dtm_t> jtag_dtm(new jtag_dtm_t(&demo_riscv_core.debug_module, dmi_rti));
+
+    if (use_rbb) {
+      remote_bitbang.reset(new remote_bitbang_t(rbb_port, &(*jtag_dtm)));
+      demo_riscv_core.set_remote_bitbang(&(*remote_bitbang));
+    }
 
 
     // this is runtime from this point
