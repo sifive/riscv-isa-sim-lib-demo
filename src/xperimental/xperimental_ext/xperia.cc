@@ -1,3 +1,5 @@
+#define DECODE_MACRO_USAGE_LOGGED 1
+#include <sys/syscall.h>
 #include "extension.h"
 #include "processor.h"
 #include "decode.h"
@@ -17,7 +19,9 @@ struct : public arg_t {
 
 static reg_t peri_a_add_impl(processor_t* p, insn_t insn, reg_t pc)
 {
+  #define xlen (p->get_xlen())
   #include "peri_a_add_impl.h"
+  #undef xlen
   return pc + 4;
 }
 
@@ -47,4 +51,4 @@ public:
   }
 };
 
-REGISTER_EXTENSION(xperia, []() { fprintf(stderr, "xperia factory called!\n"); return new xperia_t; })
+REGISTER_EXTENSION(peria, []() { fprintf(stderr, "xxxperia factory called!\n"); return new xperia_t; })
