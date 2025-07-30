@@ -1,4 +1,4 @@
-// PEriA occupies all custom 0 page
+// PERIA occupies all custom 0 page
 
 #define MATCH_PERI_A_ADD 0x0000000b
 // R type ADD 
