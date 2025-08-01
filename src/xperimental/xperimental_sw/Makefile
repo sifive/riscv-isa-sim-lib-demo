@@ -1,4 +1,6 @@
-# RISCV_PATH TO BE SET
+ifeq ($(RISCV_PATH),)
+$(error RISCV_PATH is not set)
+endif
 LD_LIB_DIR = $(RISCV_PATH)/lib
 
 CC = $(RISCV_PATH)/bin/riscv64-unknown-elf-clang
@@ -57,5 +59,5 @@ all: main.lst main.elf
 
 .PHONY: clean
 clean:
-	rm -f $(OBJS) *.o *.elf *.bin *.lst counters.hex *.vcd out.hex
+	rm -f $(OBJS) *.o *.elf *.lst
 
