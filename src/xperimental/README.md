@@ -23,7 +23,6 @@ We define 2 custom extensions, which can be dynamically linked with Spike (XPERI
 
 Please use spike build from `git@github.com:riscv-software-src/riscv-isa-sim.git`
 
-
 Assumin that you have built Spike and installed it into `/tools/riscv-isa-sim/20250801`
 
 running with spike for 42 instructions:
@@ -33,6 +32,14 @@ LD_LIBRARY_PATH=/tools/riscv-isa-sim/20250801/lib /tools/riscv-isa-sim/20250801/
 ```
 
 The execution log is in `log.txt` file.
+
+You will see the custom instructions with correct disassembly in the log file.
+
+```
+core   0: 0x0000000080000018 (0x00c5850b) peri.a.add a1
+...
+core   0: 0x0000000080000048 (0x0020022b) peri.v.add v4, v0, v2
+```
 
 PRs in Spike:
 * ???
