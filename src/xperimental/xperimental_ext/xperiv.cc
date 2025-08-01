@@ -1,4 +1,4 @@
-#define DECODE_MACRO_USAGE_LOGGED 1
+#define DECODE_MACRO_USAGE_LOGGED 0
 #include <sys/syscall.h>
 #include "extension.h"
 #include "processor.h"
@@ -6,6 +6,9 @@
 #include "insn_macros.h"
 #include "decode_macros.h"
 
+#ifndef xlen
+#define xlen 64
+#endif
 
 #define MATCH_PERI_V_ADD 0x0000002b
 #define MASK_PERI_V_ADD  0xfc00707f
@@ -38,9 +41,7 @@ struct : public arg_t {
 
 static reg_t peri_v_add_impl(processor_t* p, insn_t insn, reg_t pc)
 {
-  #define xlen (p->get_xlen())
-  #include "peri_v_add_impl.h"
-  #undef xlen
+  WRITE_RD(sext_xlen(RS1 + RS2));
   return pc + 4;
 }
 

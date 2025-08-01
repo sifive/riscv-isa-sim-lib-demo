@@ -1,4 +1,4 @@
-#define DECODE_MACRO_USAGE_LOGGED 1
+#define DECODE_MACRO_USAGE_LOGGED 0
 #include <sys/syscall.h>
 #include "extension.h"
 #include "processor.h"
@@ -10,6 +10,8 @@
 #define MATCH_PERI_A_ADD 0x0000000b
 #define MASK_PERI_A_ADD  0xfe00707f 
 
+#define xlen 64
+
 // Argument descriptor for disassembly
 struct : public arg_t {
   std::string to_string(insn_t insn) const {
@@ -19,9 +21,16 @@ struct : public arg_t {
 
 static reg_t peri_a_add_impl(processor_t* p, insn_t insn, reg_t pc)
 {
-  #define xlen (p->get_xlen())
-  #include "peri_a_add_impl.h"
-  #undef xlen
+//   #define xlen (p->get_xlen())
+//   #include "peri_a_add_impl.h"
+//   #undef xlen
+    auto reg = insn.rd();
+
+    // CHECK_REG(reg); // nothing
+    reg_t wdata = (0x55); /* value may have side effects */
+    if (DECODE_MACRO_USAGE_LOGGED) STATE.log_reg_write[(reg) << 4] = {wdata, 0}; 
+
+    STATE.XPR.write(reg, wdata);
   return pc + 4;
 }
 
