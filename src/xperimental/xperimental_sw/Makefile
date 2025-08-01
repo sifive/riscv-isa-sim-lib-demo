@@ -1,5 +1,4 @@
 # RISCV_PATH TO BE SET
-RISCV_PATH = /home/mslijepc/work/github/RISCV_TOOLCHAIN/riscv64-unknown-elf-toolsuite-3.0.6-x86_64-linux-redhat8
 LD_LIB_DIR = $(RISCV_PATH)/lib
 
 CC = $(RISCV_PATH)/bin/riscv64-unknown-elf-clang
