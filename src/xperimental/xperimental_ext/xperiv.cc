@@ -14,14 +14,6 @@
 #define MATCH_PERI_V_ADD 0x0000002b
 #define MASK_PERI_V_ADD  0xfc00707f
 
-// Argument descriptor for disassembly
-struct : public arg_t {
-  std::string to_string(insn_t insn) const {
-    return xpr_name[insn.rs1()];
-  }
-} xrs1;
-
-// Add more argument descriptors for vector instruction
 struct : public arg_t {
   std::string to_string(insn_t insn) const {
     return vr_name[insn.rd()];
