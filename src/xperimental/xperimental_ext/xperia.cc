@@ -19,18 +19,21 @@ struct : public arg_t {
   }
 } xrs1;
 
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xpr_name[insn.rs2()];
+  }
+} xrs2;
+
+struct : public arg_t {
+  std::string to_string(insn_t insn) const {
+    return xpr_name[insn.rd()];
+  }
+} xrd;
+
 static reg_t peri_a_add_impl(processor_t* p, insn_t insn, reg_t pc)
 {
-//   #define xlen (p->get_xlen())
-//   #include "peri_a_add_impl.h"
-//   #undef xlen
-    auto reg = insn.rd();
-
-    // CHECK_REG(reg); // nothing
-    reg_t wdata = (0x55); /* value may have side effects */
-    if (DECODE_MACRO_USAGE_LOGGED) STATE.log_reg_write[(reg) << 4] = {wdata, 0}; 
-
-    STATE.XPR.write(reg, wdata);
+  WRITE_RD(sext_xlen(RS1 + RS2));
   return pc + 4;
 }
 
@@ -54,7 +57,7 @@ public:
   std::vector<disasm_insn_t*> get_disasms(const processor_t *) override {
     std::vector<disasm_insn_t*> insns;
     
-    insns.push_back(new disasm_insn_t("peri.a.add", MATCH_PERI_A_ADD, MASK_PERI_A_ADD, {&xrs1}));
+    insns.push_back(new disasm_insn_t("peri.a.add", MATCH_PERI_A_ADD, MASK_PERI_A_ADD, {&xrd, &xrs1, &xrs2}));
     
     return insns;
   }
