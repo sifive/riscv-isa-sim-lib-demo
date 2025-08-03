@@ -5,6 +5,7 @@
 #include "decode.h"
 #include "insn_macros.h"
 #include "decode_macros.h"
+#include "v_ext_macros.h"
 
 #ifndef xlen
 #define xlen 64
@@ -41,7 +42,10 @@ struct : public arg_t {
 
 static reg_t peri_v_add_impl(processor_t* p, insn_t insn, reg_t pc)
 {
-  WRITE_RD(sext_xlen(RS1 + RS2));
+  VI_VV_LOOP
+  ({
+    vd = vs1 + vs2;
+  })
   return pc + 4;
 }
 
