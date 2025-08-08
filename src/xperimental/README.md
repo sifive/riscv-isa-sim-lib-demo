@@ -2,7 +2,7 @@
 
 This an example of how to add custom extensions to Spike.
 
-We define 2 custom extensions, which can be dynamically linked with Spike (XPERIA and XPERIB)
+We define 2 custom extensions, which can be dynamically linked with Spike (XPERIA and XPERIV)
 
 * XPERIA is a scalar extension, which include 1 instruction
 * XPERIV is a vector extension, which include 1 instruction
