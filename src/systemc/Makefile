@@ -1,8 +1,8 @@
 
-# variables which needs to be set:
+# variables which should to be set:
 # SPIKE_INCLUDE_DIR - path to spike headers
 ifeq ($(SPIKE_INCLUDE_DIR),)
-$(error SPIKE_INCLUDE_DIR is not set)
+$(warning SPIKE_INCLUDE_DIR is not set)
 endif
 
 # Useful targets:
@@ -59,4 +59,4 @@ demo: $(OBJS) $(SYSTEMC_LIBDIR)/libsystemc.a
 
 .PHONY: clean
 clean:
-	$(RM) $(OBJS) $(DEPS) demo
+	$(RM) $(OBJS) $(DEPS) demog
