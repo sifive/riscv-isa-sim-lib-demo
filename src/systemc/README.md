@@ -8,6 +8,7 @@ The SystemC integration provides:
 - A multi-core RISC-V processor wrapped in SystemC modules
 - TLM-based memory interface for SystemC simulation
 - Debug support with JTAG interface (re-used from Spike)
+- Remote bitbang support for external debugging
 - Integration with external SystemC testbenches
 
 ## Architecture
@@ -62,7 +63,7 @@ The processor is configured in `sc_main.cpp`:
 ```cpp
 cfg.isa = "rv64imafdcv_zicsr";  // ISA string with extensions
 cfg.priv = "MSU";                        // Privilege levels
-cfg.start_pc = 0x20000000;              // Start PC address
+cfg.start_pc = START_PC;              // Start PC address
 ```
 
 ### Memory Layout
@@ -85,14 +86,32 @@ The test uses a finisher register at `SCR_BASE + 0x8`:
 
 ## Running
 
+### Basic Execution
 Execute the SystemC simulation:
 ```bash
 ./demo
 ```
 
+### Debug Mode
+Enable debug logging:
+```bash
+./demo --debug
+# or
+./demo -d
+```
+
+### Remote Bitbang Debug
+Enable remote bitbang for external debugger connection:
+```bash
+./demo --rbb-port=9824
+```
+
 ## Debug Support
 
-Enable debug mode by modifying the `enable_debug` flag in `sc_main.cpp`. This provides:
+Enable debug mode by passing command line arguments or modifying the `enable_debug` flag in `sc_main.cpp`. This provides:
 - Instruction tracing
 - Memory access logging
 - JTAG debug interface support
+
+### JTAG Debug Interface
+The system includes JTAG DTM (Debug Transport Module) support for external debugging tools. When remote bitbang is enabled, external debuggers can connect via the specified port.
