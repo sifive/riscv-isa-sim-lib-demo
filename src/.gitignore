@@ -1,0 +1,4 @@
+*.d
+*.o
+systemc/demo
+cpp/demo
