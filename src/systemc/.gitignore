@@ -1,2 +1,4 @@
 *.d
 *.o
+out.txt
+demo
