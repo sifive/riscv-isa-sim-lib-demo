@@ -154,6 +154,16 @@ public:
         std::copy(page.data() + offs, page.data() + offs + len, data_ptr);
     }
 
+    char* get_ptr(uint64_t addr) {
+        assert(addr < SIZE);
+        const uint32_t page_nr = addr / page_size;
+        assert(page_nr < page_count);
+        if (arr.at(page_nr) == nullptr) {
+            arr.at(page_nr) = new page_type();
+        }
+        return (char*)arr[page_nr] + (addr & page_addr_mask);
+    }
+
 protected:
     std::array<page_type*, (1 << upper_width) + 1> arr;
 };
