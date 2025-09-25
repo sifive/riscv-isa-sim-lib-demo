@@ -58,7 +58,7 @@ turbo_core::turbo_core(sc_module_name nm, const cfg_t* cfg, const debug_module_c
     bus = std::make_unique<bus_t>();
     bus->add_device(0x0, &debug_module);
 
-    configure_log(true, true);
+    configure_log(false);
     init_socket.register_nb_transport_bw(this, &turbo_core::nb_transport);
 
 }
@@ -160,20 +160,20 @@ const char* turbo_core::get_symbol(uint64_t paddr) {
 }
 
 void turbo_core::run_m() {
-    uint64_t cnt = 0;
     while(1) {
-        simulate(5000);
-        if (++cnt == 2) {
+        simulate_n_cycles(STEP_CYCLES);
+        #ifdef MEASURE_PERF
+        total_instructions_executed += STEP_CYCLES;
+        if (total_instructions_executed % PERF_REPORT_INTERVAL == 0) {
             report_performance();
-            cnt = 0;
         }
+        #endif
     }
 }
 
 #ifdef MEASURE_PERF
 void turbo_core::report_performance()
 {
-    total_instructions_executed += PERF_REPORT_INTERVAL;
   auto current_time = std::chrono::high_resolution_clock::now();
   auto elapsed_since_last = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_report_time);
 
@@ -182,8 +182,8 @@ void turbo_core::report_performance()
   if (elapsed_since_last.count() > 0) {
     double interval_seconds = elapsed_since_last.count() / (1000000.0);
     double current_mhz = (instructions_since_last / interval_seconds) / 1000000.0;
-    // fprintf(stderr, "Sim speed: %.2f MHz (%llu instructions, %.3f ms)\n", 
-    //         current_mhz, total_instructions_executed, elapsed_since_last.count() / 1000.0);
+    fprintf(stderr, "Sim speed: %.2f MHz (%llu instructions, %.3f ms)\n", 
+            current_mhz, total_instructions_executed, elapsed_since_last.count() / 1000.0);
   }
   
   last_report_time = current_time;
@@ -191,9 +191,9 @@ void turbo_core::report_performance()
 }
 #endif
 
-void turbo_core::configure_log(bool enable_log, bool enable_commitlog) {
+void turbo_core::configure_log(bool enable_log) {
     log = enable_log;
-    if (enable_commitlog) {
+    if (enable_log) {
         for (auto& proc : procs) {
             cout << "Enabling commit log " << endl;
             proc->enable_log_commits();
@@ -201,12 +201,12 @@ void turbo_core::configure_log(bool enable_log, bool enable_commitlog) {
     }
 }
 
-inline void turbo_core::simulate(size_t cycles)  {
+inline void turbo_core::simulate_n_cycles(size_t cycles)  {
         current_proc = 0;
 
         for(auto& proc : procs) {
-            current_proc++;
             proc->step(cycles);
+            current_proc++;
         }
         if (remote_bitbang)
             this->remote_bitbang->tick();

@@ -54,7 +54,7 @@ public:
         start_ev.notify(SC_ZERO_TIME); 
     }
 
-    inline void simulate(size_t cycles);
+    inline void simulate_n_cycles(size_t cycles);
 
     void end_simulation() {
         cout << "Now is the end of simulation @ " << sc_time_stamp() << endl;
@@ -92,7 +92,7 @@ public:
         }
     }
 
-    void configure_log(bool enable_log, bool enable_commitlog = false);
+    void configure_log(bool enable_log = false);
     bool log{false};
     log_file_t log_file{"out.txt"}; // Default log file
     inline bool is_spike_device_addr(reg_t paddr);
@@ -104,6 +104,8 @@ private:
 
     std::map<size_t, processor_t*> harts;
 
+    // counting instructions
+    static constexpr uint64_t STEP_CYCLES = 5000;
     // isa-related
     isa_parser_t isa;
     const cfg_t* const cfg;
