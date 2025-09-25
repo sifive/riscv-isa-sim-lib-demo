@@ -20,6 +20,11 @@ using namespace tlm;
 #include "util/dbg_component.h" // needed for debug_component class
 class remote_bitbang_t;
 
+
+#ifdef MEASURE_PERF
+#include <chrono>
+#endif
+
 class turbo_tlm_extension : public tlm_extension<turbo_tlm_extension> {
 public:
     turbo_tlm_extension() {}
@@ -70,6 +75,16 @@ public:
     // end pure virtual functions
 
     processor_t* get_core(size_t i) { return procs.at(i); }
+
+    #ifdef MEASURE_PERF
+    static const uint64_t PERF_REPORT_INTERVAL = 10000;
+    std::chrono::high_resolution_clock::time_point sim_start_time;
+    std::chrono::high_resolution_clock::time_point last_report_time;
+    uint64_t total_instructions_executed;
+    uint64_t instructions_at_last_report;
+    void report_performance();
+    #endif
+
 
     void reset() {
         for(auto& proc : procs) {

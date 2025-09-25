@@ -15,6 +15,13 @@ turbo_core::turbo_core(sc_module_name nm, const cfg_t* cfg, const debug_module_c
   isa(cfg ? cfg->isa : "", cfg ? cfg->priv : ""),
   debug_module(this, dm_config) {
     
+    #ifdef MEASURE_PERF
+    sim_start_time = std::chrono::high_resolution_clock::now();
+    last_report_time = sim_start_time;
+    instructions_at_last_report = 0;
+    total_instructions_executed = 0;
+    #endif
+
     assert(cfg != nullptr && "cfg cannot be nullptr");
     // SystemC processes
     SC_THREAD(run_m);
@@ -153,9 +160,36 @@ const char* turbo_core::get_symbol(uint64_t paddr) {
 }
 
 void turbo_core::run_m() {
-    while(1)
+    uint64_t cnt = 0;
+    while(1) {
         simulate(5000);
+        if (++cnt == 2) {
+            report_performance();
+            cnt = 0;
+        }
+    }
 }
+
+#ifdef MEASURE_PERF
+void turbo_core::report_performance()
+{
+    total_instructions_executed += PERF_REPORT_INTERVAL;
+  auto current_time = std::chrono::high_resolution_clock::now();
+  auto elapsed_since_last = std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_report_time);
+
+  uint64_t instructions_since_last = total_instructions_executed - instructions_at_last_report;
+
+  if (elapsed_since_last.count() > 0) {
+    double interval_seconds = elapsed_since_last.count() / (1000000.0);
+    double current_mhz = (instructions_since_last / interval_seconds) / 1000000.0;
+    // fprintf(stderr, "Sim speed: %.2f MHz (%llu instructions, %.3f ms)\n", 
+    //         current_mhz, total_instructions_executed, elapsed_since_last.count() / 1000.0);
+  }
+  
+  last_report_time = current_time;
+  instructions_at_last_report = total_instructions_executed;
+}
+#endif
 
 void turbo_core::configure_log(bool enable_log, bool enable_commitlog) {
     log = enable_log;
